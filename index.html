@@ -1,0 +1,84 @@
+<html>
+<head>
+    <style>
+        body {
+            font-family: Helvetica, Arial, sans-serif;
+            background-color: white;
+        }
+        h1 {
+            background-color: white;
+            color:black;
+            text-align: center;
+            margin-top:20px;
+            font-family:Impact,fantasy;
+        }
+
+        h2{
+            background-color: white;
+            color:black;
+            text-align: center;
+        }
+        svg{
+            border-style:none;
+        }
+
+        .mainview{
+            display:flex;
+            flex-direction:column;
+        }
+    </style>
+
+    <script type='text/javascript' src="https://d3js.org/d3.v5.min.js"></script>
+</head>
+
+<body>
+    <h1> Baseball Game Video Feature vector</h1>
+    <div>
+        <h2>TSNE </h2>  
+        <svg id="Scatter" ></svg>
+    </div>
+</body>
+
+<script>
+    let store={}
+    const action='bbgame_swing_ball';
+    const split='train';
+    const date='0815';
+    const json_path=`jsons/${action}_${split}_${date}_embs.json`;
+    function loadData() {
+        return Promise.all([
+            d3.json(json_path)
+        ]).then(datasets =>{
+            store.embs_dict=datasets[0];
+            return store;
+        })
+    }
+
+    function showData(){
+        let embs_dict=store.embs_dict;
+        let {tsne,dtw,names,steps,seq_lens,seq_labels }=embs_dict;
+
+    }
+    function embsScatter() {
+        const width=1200;
+        const height=500;
+        const margib={top:50,bottom:50,left:50,right:50};
+
+        let svg=d3.select("#Scatter")
+            .style("font","14px Montserrat");
+        
+        let body=svg.append()
+
+
+    }
+    loadData().then(showData);
+</script>
+
+</html>
+
+<!-- 
+    color template: 
+        123f77 0f86b6 37cae5 f5db73
+        2d3505 828227 aa3b00 d6873e
+
+ -->
