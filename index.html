@@ -9,7 +9,7 @@
             background-color: white;
             color:black;
             text-align: center;
-            margin-top:20px;
+            margin-top: 20px;
             font-family:Impact,fantasy;
         }
 
@@ -20,12 +20,18 @@
         }
         svg{
             border-style:none;
+            /* background-color:whitesmoke; */
         }
 
         .mainview{
+            position:relative;
             display:flex;
             flex-direction:column;
+            width: 80%;
+            height: 100%;
+            left: 10%;
         }
+
     </style>
 
     <script type='text/javascript' src="https://d3js.org/d3.v5.min.js"></script>
@@ -33,7 +39,7 @@
 
 <body>
     <h1> Baseball Game Video Feature vector</h1>
-    <div>
+    <div class="mainview", id="TSNE">
         <h2>TSNE </h2>  
         <svg id="Scatter" ></svg>
     </div>
@@ -44,32 +50,127 @@
     const action='bbgame_swing_ball';
     const split='train';
     const date='0815';
-    const json_path=`jsons/${action}_${split}_${date}_embs.json`;
+    const json_path=`data/${action}_${split}_${date}_5000_embs.csv`;
     function loadData() {
         return Promise.all([
-            d3.json(json_path)
+            d3.csv(json_path)
         ]).then(datasets =>{
             store.embs_dict=datasets[0];
             return store;
         })
     }
 
-    function showData(){
-        let embs_dict=store.embs_dict;
-        let {tsne,dtw,names,steps,seq_lens,seq_labels }=embs_dict;
+    function embsScatter(embs) {
+        var width=d3.select(".mainview")
+            .style("width")
+            .slice(0,-2);
+        var height=d3.select(".mainview")
+            .style("height")
+            .slice(0,-2);
+        const margin={top:80,bottom:30,left:50,right:50};
 
-    }
-    function embsScatter() {
-        const width=1200;
-        const height=500;
-        const margib={top:50,bottom:50,left:50,right:50};
+        var maxWidth=d3.min([width*0.7,800]);
+        var maxHeight=d3.min([height*0.5,500]);
 
-        let svg=d3.select("#Scatter")
-            .style("font","14px Montserrat");
+        var svg=d3.select("#Scatter")
+            .attr("width","100%")
+            .attr("height","100%")
+            // .style("font","14px");
+
+        var body=svg.append("g")
+            .style("transform",`translate(${margin.left}px,${margin.top}px)`);
+
+        var dtwAArray=[];
+        var dtwBArray=[];
+        for (let d=0;d<embs.length;d++){
+            if (+embs[d].seq_labels==0){
+                dtwAArray.push(+embs[d].dtw);
+            }else{
+                dtwBArray.push(+embs[d].dtw);
+            }
+        }
+        dtwAArray.sort(function(x,y){
+            return d3.ascending(x,y);
+        })
+        dtwBArray.sort(function(x,y){
+            return d3.ascending(x,y);
+        })
+
+        var domainA=[d3.quantile(dtwAArray,0),
+            d3.quantile(dtwAArray,0.25),
+            d3.quantile(dtwAArray,0.5),
+            d3.quantile(dtwAArray,0.75),
+            d3.quantile(dtwAArray,1)]
+        var domainB=[d3.quantile(dtwBArray,0),
+            d3.quantile(dtwBArray,0.25),
+            d3.quantile(dtwBArray,0.5),
+            d3.quantile(dtwBArray,0.75),
+            d3.quantile(dtwBArray,1)]
+
+        var colorsA=['#edf8fb','#b2e2e2','#66c2a4','#2ca25f','#006d2c']; 
+        var colorsB=['#feebe2','#fbb4b9','#f768a1','#c51b8a','#7a0177'];
+        // var R2B=['#d7191c','#fdae61','#ffffbf','#abdda4','#2b83ba'];
         
-        let body=svg.append()
+        var colorScaleA=d3.scaleLinear()
+            .domain(domainA)
+            .range(colorsA);
+        var colorScaleB=d3.scaleLinear()
+            .domain(domainB)
+            .range(colorsB);
 
+        var xScale=d3.scaleLinear()
+            .range([0,maxWidth])
+            .domain(d3.extent(embs.map(a=> eval(a.tsne)[0]*1.1)))
+        var yScale=d3.scaleLinear()
+            .range([maxHeight,0])
+            .domain(d3.extent(embs.map(a=> eval(a.tsne)[1]*1.1)))
 
+        var points=body.selectAll(".point")
+        points.data(embs).enter()
+            .append("path")
+            .attr("class","point")
+            .attr("d",d3.symbol().size("50").type(function(d){
+                if(+d.seq_labels==0){
+                    return d3.symbolCircle;
+                }else{
+                    return d3.symbolTriangle;
+                }
+            }))
+            .attr("transform",function(d){
+                return `translate(${xScale(eval(d.tsne)[0])},${yScale(eval(d.tsne)[1])})`;
+            })
+            .attr("fill-opacity",.7)
+            .attr("fill",function(d){
+                if(+d.seq_labels==0){
+                    return colorScaleA(d.dtw)
+                }else{
+                    return colorScaleB(d.dtw)
+                }
+            });
+        
+        // Add axis
+        
+        var axisX=d3.axisBottom(xScale).tickSize(0);
+        var axisY=d3.axisLeft(yScale).tickSize(0);
+
+        svg.append("g")
+            .style("font","12px")
+            .style("transform",`translate(${margin.left}px,${margin.top+maxHeight}px)`)
+            .call(axisX)
+        svg.append("g")
+            .style("font","12px")
+            .style("transform",`translate(${margin.left}px,${margin.top}px)`)
+            .call(axisY)
+        
+        // Add legend
+        var legend=svg.selectAll(g.legend)
+                .data()
+    }
+
+    function showData(){
+        let embs=store.embs_dict;
+
+        embsScatter(embs);
     }
     loadData().then(showData);
 </script>
