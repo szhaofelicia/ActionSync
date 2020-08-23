@@ -106,9 +106,12 @@
             d3.quantile(dtwBArray,0.5),
             d3.quantile(dtwBArray,0.75),
             d3.quantile(dtwBArray,1)]
+        
+        var domains=[domainA,domainB];
 
         var colorsA=['#edf8fb','#b2e2e2','#66c2a4','#2ca25f','#006d2c']; 
         var colorsB=['#feebe2','#fbb4b9','#f768a1','#c51b8a','#7a0177'];
+        var colors=[colorsA,colorsB];
         // var R2B=['#d7191c','#fdae61','#ffffbf','#abdda4','#2b83ba'];
         
         var colorScaleA=d3.scaleLinear()
@@ -162,9 +165,47 @@
             .style("transform",`translate(${margin.left}px,${margin.top}px)`)
             .call(axisY)
         
-        // Add legend
-        var legend=svg.selectAll(g.legend)
-                .data()
+        // Add colorbars
+        const lg_w=20;
+        const lg_h=150;
+        var lg_x;
+        var lg_y;
+        var defs=svg.append("defs");
+        var linearGradient;
+        for(var i=0;i<2;i++){
+            lg_x=maxWidth+i*lg_w*2+50;
+            lg_y=maxHeight-lg_h;
+
+            linearGradient=defs.append("linearGradient")
+                .attr("id","linear-gradient-"+i);
+            linearGradient
+                .attr("x1","100%")
+                .attr("y1","100%")
+                .attr("x2","100%")
+                .attr("y2","0%");
+            linearGradient.selectAll("stop")
+                .data([
+                    {offset:"0%",color:colors[i][0]},
+                    {offset:"25%",color:colors[i][1]},
+                    {offset:"50%",color:colors[i][2]},
+                    {offset:"75%",color:colors[i][3]},
+                    {offset:"100%",color:colors[i][4]},
+                ]).enter()
+                .append("stop")
+                .attr("offset", function(d) { return d.offset; })
+                .attr("stop-color", function(d) { return d.color; });
+
+            body.append("rect")
+                .attr("x",lg_x)
+                .attr("y",lg_y)
+                .attr("width",lg_w)
+                .attr("height",lg_h)
+                .attr("fill","url(#linear-gradient-"+i+")")
+                .style("opacity",0.7);
+            
+            body.append("text")
+                .style("font-size","12px")
+        }
     }
 
     function showData(){
@@ -181,5 +222,4 @@
     color template: 
         123f77 0f86b6 37cae5 f5db73
         2d3505 828227 aa3b00 d6873e
-
  -->
