@@ -1,10 +1,11 @@
 <html>
 <head>
     <style>
-        body {
+        body{
             font-family: Helvetica, Arial, sans-serif;
             background-color: white;
         }
+        
         h1 {
             background-color: white;
             color:black;
@@ -35,6 +36,8 @@
     </style>
 
     <script type='text/javascript' src="https://d3js.org/d3.v5.min.js"></script>
+    <script src="https://rawgit.com/Kcnarf/d3-distanceLimitedVoronoi/d3v4/distance-limited-voronoi.js"></script>
+
 </head>
 
 <body>
@@ -47,9 +50,9 @@
 
 <script>
     let store={}
-    const action='bbgame_swing_ball';
-    const split='train';
-    const date='0815';
+    const action="bbgame_swing_ball";
+    const split="train";
+    const date="0815";
     const json_path=`data/${action}_${split}_${date}_5000_embs.csv`;
     function loadData() {
         return Promise.all([
@@ -58,6 +61,83 @@
             store.embs_dict=datasets[0];
             return store;
         })
+    }
+
+    function tooltipMouseOver(d, i) {
+        let el = d3.select("body");
+  
+        let div = el
+            .append("g")
+            .append("div")
+            .attr("class", "tooltip")
+            .style("opacity", 0);
+
+        div
+            .html(`
+                    Country: ${d.datum['countries']} </br>
+                    Personal Freedom Score: ${decFormat(d.datum['pf_score'])} </br>
+                    Population: ${bigFormat(d.datum['population'])} </br>
+                    GDP per capita: ${bigFormat(d.datum['gdp_ppp_cap'])}
+                    `)
+            .style("opacity", 0.9)
+            .style("left", (d3.event.pageX + 28) + "px")
+            .style("top", (d3.event.pageY - 28) + "px");
+  
+        let el2 = d3.selectAll("circle#point-"+i);
+  
+        el2
+            .transition()
+            .duration(100)
+            .style("fill-opacity", 0.9)
+            .style("stroke", "black")
+            .style("stroke-width", "1px")
+            .style("stroke-opacity", 0.7);
+  
+        let guides = d3.select("svg")
+            .append("g")
+            .attr("class", "guides")
+            .style("pointer-events", "none");
+  
+        guides
+            .append("line")
+            .attr("x1", el2.attr("cx"))
+            .attr("x2", el2.attr("cx"))
+            .attr("y1", el2.attr("cy"))
+            .attr("y2", height - margin.bottom)
+            .style("stroke", el2.attr("fill"))
+            .style("opacity", 0)
+            .transition()
+            .duration(200)
+            .style("opacity", 0.7);
+        
+        guides
+            .append("line")
+            .attr("x1", el2.attr("cx"))
+            .attr("x2", margin.left)
+            .attr("y1", el2.attr("cy"))
+            .attr("y2", el2.attr("cy"))
+            .style("stroke", el2.attr("fill"))
+            .style("opacity", 0)
+            .transition()
+            .duration(200)
+            .style("opacity", 0.7);
+    }
+
+    function tooltipMouseOut(d, i) {
+        let el = d3.selectAll(".tooltip");
+    
+        el.each(function() {
+            el.remove();
+        }); 
+        let el2 = d3.selectAll("circle#point-"+i);
+  
+        el2
+            .transition()
+            .duration(100)
+            .style("fill-opacity", 0.75)
+            .style("stroke-width", "0px");
+  
+        d3.select(".guides").remove();
     }
 
     function embsScatter(embs) {
@@ -82,17 +162,17 @@
 
         var dtwAArray=[];
         var dtwBArray=[];
-        for (let d=0;d<embs.length;d++){
-            if (+embs[d].seq_labels==0){
+        for (let d=0;d<embs.length;d++) {
+            if (+embs[d].seq_labels==0) {
                 dtwAArray.push(+embs[d].dtw);
             }else{
                 dtwBArray.push(+embs[d].dtw);
             }
         }
-        dtwAArray.sort(function(x,y){
+        dtwAArray.sort(function(x,y) {
             return d3.ascending(x,y);
         })
-        dtwBArray.sort(function(x,y){
+        dtwBArray.sort(function(x,y) {
             return d3.ascending(x,y);
         })
 
@@ -109,8 +189,8 @@
         
         var domains=[domainA,domainB];
 
-        var colorsA=['#edf8fb','#b2e2e2','#66c2a4','#2ca25f','#006d2c']; 
-        var colorsB=['#feebe2','#fbb4b9','#f768a1','#c51b8a','#7a0177'];
+        var colorsA=["#edf8fb","#b2e2e2","#66c2a4","#2ca25f","#006d2c"]; 
+        var colorsB=["#feebe2","#fbb4b9","#f768a1","#c51b8a","#7a0177"];
         var colors=[colorsA,colorsB];
         // var R2B=['#d7191c','#fdae61','#ffffbf','#abdda4','#2b83ba'];
         
@@ -127,24 +207,26 @@
         var yScale=d3.scaleLinear()
             .range([maxHeight,0])
             .domain(d3.extent(embs.map(a=> eval(a.tsne)[1]*1.1)))
+        
+        const pointSize=75;
 
         var points=body.selectAll(".point")
         points.data(embs).enter()
             .append("path")
             .attr("class","point")
-            .attr("d",d3.symbol().size("50").type(function(d){
-                if(+d.seq_labels==0){
+            .attr("d",d3.symbol().size(pointSize).type(function(d) {
+                if(+d.seq_labels==0) {
                     return d3.symbolCircle;
                 }else{
                     return d3.symbolTriangle;
                 }
             }))
-            .attr("transform",function(d){
+            .attr("transform",function(d) {
                 return `translate(${xScale(eval(d.tsne)[0])},${yScale(eval(d.tsne)[1])})`;
             })
-            .attr("fill-opacity",.7)
-            .attr("fill",function(d){
-                if(+d.seq_labels==0){
+            .attr("fill-opacity",.5)
+            .attr("fill",function(d) {
+                if(+d.seq_labels==0) {
                     return colorScaleA(d.dtw)
                 }else{
                     return colorScaleB(d.dtw)
@@ -152,18 +234,50 @@
             });
         
         // Add axis
-        
         var axisX=d3.axisBottom(xScale).tickSize(0);
         var axisY=d3.axisLeft(yScale).tickSize(0);
 
+        svg.append("defs")
+            .append("marker")
+            .attr("id", "arrowhead-right")
+            .attr("refX", 5)
+            .attr("refY", 5)
+            .attr("markerWidth", 5)
+            .attr("markerHeight", 10)
+            .append("path")
+            .attr("d", "M 0 0 L 5 5 L 0 10")
+            .attr("stroke", "black")
+            .attr("stroke-width", 1)
+            .attr("fill", "none");
+
+        svg.append("defs")
+            .append("marker")
+            .attr("id", "arrowhead-top")
+            .attr("refX", 5)
+            .attr("refY", 0)
+            .attr("markerWidth", 10)
+            .attr("markerHeight", 5)
+            .append("path")
+            .attr("d", "M 0 5 L 5 0 L 10 5")
+            .attr("stroke", "black")
+            .attr("stroke-width", 1)
+            .attr("fill", "none");
+  
         svg.append("g")
+            .attr("id","axisX")
             .style("font","12px")
             .style("transform",`translate(${margin.left}px,${margin.top+maxHeight}px)`)
             .call(axisX)
+        svg.select("#axisX path.domain")
+            .attr("marker-end","url(#arrowhead-right)");
+
         svg.append("g")
+            .attr("id","axisY")
             .style("font","12px")
             .style("transform",`translate(${margin.left}px,${margin.top}px)`)
             .call(axisY)
+        svg.select("#axisY path.domain")
+            .attr("marker-end","url(#arrowhead-top)");
         
         // Add colorbars
         const lg_w=20;
@@ -172,8 +286,8 @@
         var lg_y;
         var defs=svg.append("defs");
         var linearGradient;
-        for(var i=0;i<2;i++){
-            lg_x=maxWidth+i*lg_w*2+50;
+        for(var i=0;i<2;i++) {
+            lg_x=maxWidth+i*lg_w*2.5+50;
             lg_y=maxHeight-lg_h;
 
             linearGradient=defs.append("linearGradient")
@@ -203,12 +317,74 @@
                 .attr("fill","url(#linear-gradient-"+i+")")
                 .style("opacity",0.7);
             
+            let colorBarDomain=domains[i].map(d=>d.toFixed(0));
+            let colorBardRange=[lg_h,lg_h*0.75,lg_h*0.5,lg_h*0.25,0];
+            
+            body.append("g")
+                .attr("transform",`translate(${lg_x+lg_w},${lg_y})`)
+                .call(d3.axisRight(d3.scaleOrdinal().domain(colorBarDomain).range(colorBardRange)));
+            
+            // Action legend
+            body.append("path")
+                .attr("id","marker"+i)
+                .attr("d",d3.symbol().size("150").type(function() {
+                    if (i==0) {
+                        return d3.symbolCircle;
+                    }else {
+                        return d3.symbolTriangle;
+                    }
+                }))
+                .attr("transform",`translate(${maxWidth+60},${50+i*lg_h*0.15})`)
+                .attr("width",lg_w)
+                .attr("height",lg_h*0.25)
+                .attr("fill",colors[i][4])
+                .attr("fill-opacity",0.7)
             body.append("text")
                 .style("font-size","12px")
+                .style("text-anchor","start")
+                .attr("transform",`translate(${maxWidth+75},${55+i*lg_h*0.15})`)
+                .attr("fill","#000000")
+                .text(function() {
+                    if (i==0) {
+                        return "Swing";
+                    }else {
+                        return "Ball";
+                    }
+                });   
         }
+        // Add legend titles
+        body.append("text")
+            .style("font-size","14px")
+            .style("text-anchor","start")
+            .attr("transform",`translate(${maxWidth+50},${lg_y-10})`)
+            .attr("fill","#000000")
+            .text("DTW Order");   
+        body.append("text")
+            .style("font-size","14px")
+            .style("text-anchor","start")
+            .attr("transform",`translate(${maxWidth+50},${35})`)
+            .attr("fill","#000000")
+            .text("Actions"); 
+        
+        // Add interaction
+        // var limitedVoronoi=d3.distanceLimitedVoronoi()
+        //     .x(d => xScale(eval(d.tsne)[0]))
+        //     .y(d => yScale(eval(d.tsne)[1]))
+        //     .limit(25)
+        
+        var voronoi=d3.voronoi()
+            .x(d => xScale(eval(d.tsne)[0]))
+            .y(d => yScale(eval(d.tsne)[1]))
+            .size([maxWidth,maxHeight])(embs);
+        
+        body.append("path")
+            .attr("class","highlight-point-")
+            .attr("size",pointSize+10)
+            .style("display","none")
+    
     }
 
-    function showData(){
+    function showData() {
         let embs=store.embs_dict;
 
         embsScatter(embs);
