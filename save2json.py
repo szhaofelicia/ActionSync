@@ -88,7 +88,7 @@ with open(csv_path%(action,split,date),'w') as csvfile:
         writer.writerow(data)
 
 
-# sampel 5000
+# sampel 200
 samp_idx=[x for x in range(200)]  
 
 csv_data=[]
