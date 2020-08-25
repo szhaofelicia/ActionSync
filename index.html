@@ -21,7 +21,7 @@
         }
         svg{
             border-style:none;
-            /* background-color:whitesmoke; */
+            background-color: white;
         }
 
         .mainview{
@@ -32,11 +32,26 @@
             height: 100%;
             left: 10%;
         }
+        .tooltip {
+            position: absolute;
+            font-size: 12px;
+            width:  auto;
+            height: auto;
+            pointer-events: none;
+            background-color: white;
+        }
 
     </style>
 
-    <script type='text/javascript' src="https://d3js.org/d3.v5.min.js"></script>
-    <script src="https://rawgit.com/Kcnarf/d3-distanceLimitedVoronoi/d3v4/distance-limited-voronoi.js"></script>
+    <script 
+        type='text/javascript' 
+        src="https://d3js.org/d3.v5.min.js"
+        charset="utf-8"
+    >
+    </script>
+
+
+
 
 </head>
 
@@ -61,83 +76,6 @@
             store.embs_dict=datasets[0];
             return store;
         })
-    }
-
-    function tooltipMouseOver(d, i) {
-        let el = d3.select("body");
-  
-        let div = el
-            .append("g")
-            .append("div")
-            .attr("class", "tooltip")
-            .style("opacity", 0);
-
-        div
-            .html(`
-                    Country: ${d.datum['countries']} </br>
-                    Personal Freedom Score: ${decFormat(d.datum['pf_score'])} </br>
-                    Population: ${bigFormat(d.datum['population'])} </br>
-                    GDP per capita: ${bigFormat(d.datum['gdp_ppp_cap'])}
-                    `)
-            .style("opacity", 0.9)
-            .style("left", (d3.event.pageX + 28) + "px")
-            .style("top", (d3.event.pageY - 28) + "px");
-  
-        let el2 = d3.selectAll("circle#point-"+i);
-  
-        el2
-            .transition()
-            .duration(100)
-            .style("fill-opacity", 0.9)
-            .style("stroke", "black")
-            .style("stroke-width", "1px")
-            .style("stroke-opacity", 0.7);
-  
-        let guides = d3.select("svg")
-            .append("g")
-            .attr("class", "guides")
-            .style("pointer-events", "none");
-  
-        guides
-            .append("line")
-            .attr("x1", el2.attr("cx"))
-            .attr("x2", el2.attr("cx"))
-            .attr("y1", el2.attr("cy"))
-            .attr("y2", height - margin.bottom)
-            .style("stroke", el2.attr("fill"))
-            .style("opacity", 0)
-            .transition()
-            .duration(200)
-            .style("opacity", 0.7);
-        
-        guides
-            .append("line")
-            .attr("x1", el2.attr("cx"))
-            .attr("x2", margin.left)
-            .attr("y1", el2.attr("cy"))
-            .attr("y2", el2.attr("cy"))
-            .style("stroke", el2.attr("fill"))
-            .style("opacity", 0)
-            .transition()
-            .duration(200)
-            .style("opacity", 0.7);
-    }
-
-    function tooltipMouseOut(d, i) {
-        let el = d3.selectAll(".tooltip");
-    
-        el.each(function() {
-            el.remove();
-        }); 
-        let el2 = d3.selectAll("circle#point-"+i);
-  
-        el2
-            .transition()
-            .duration(100)
-            .style("fill-opacity", 0.75)
-            .style("stroke-width", "0px");
-  
-        d3.select(".guides").remove();
     }
 
     function embsScatter(embs) {
@@ -209,6 +147,9 @@
             .domain(d3.extent(embs.map(a=> eval(a.tsne)[1]*1.1)))
         
         const pointSize=75;
+        const pointOpacity=0.5;
+        const actions=["Swing","Ball"];
+
 
         var points=body.selectAll(".point")
         points.data(embs).enter()
@@ -224,7 +165,7 @@
             .attr("transform",function(d) {
                 return `translate(${xScale(eval(d.tsne)[0])},${yScale(eval(d.tsne)[1])})`;
             })
-            .attr("fill-opacity",.5)
+            .attr("fill-opacity",pointOpacity)
             .attr("fill",function(d) {
                 if(+d.seq_labels==0) {
                     return colorScaleA(d.dtw)
@@ -338,19 +279,13 @@
                 .attr("width",lg_w)
                 .attr("height",lg_h*0.25)
                 .attr("fill",colors[i][4])
-                .attr("fill-opacity",0.7)
+                .attr("fill-opacity",pointOpacity)
             body.append("text")
                 .style("font-size","12px")
                 .style("text-anchor","start")
                 .attr("transform",`translate(${maxWidth+75},${55+i*lg_h*0.15})`)
                 .attr("fill","#000000")
-                .text(function() {
-                    if (i==0) {
-                        return "Swing";
-                    }else {
-                        return "Ball";
-                    }
-                });   
+                .text(() => (actions[i]));   
         }
         // Add legend titles
         body.append("text")
@@ -365,23 +300,88 @@
             .attr("transform",`translate(${maxWidth+50},${35})`)
             .attr("fill","#000000")
             .text("Actions"); 
-        
-        // Add interaction
-        // var limitedVoronoi=d3.distanceLimitedVoronoi()
-        //     .x(d => xScale(eval(d.tsne)[0]))
-        //     .y(d => yScale(eval(d.tsne)[1]))
-        //     .limit(25)
-        
-        var voronoi=d3.voronoi()
+                
+        var voronoiDiagram=d3.voronoi(embs)
             .x(d => xScale(eval(d.tsne)[0]))
             .y(d => yScale(eval(d.tsne)[1]))
             .size([maxWidth,maxHeight])(embs);
         
+        const voronoiRadius=maxWidth/30;
+        
         body.append("path")
-            .attr("class","highlight-point-")
-            .attr("size",pointSize+10)
+            .attr("class","highlight-point")
             .style("display","none")
-    
+            .style("fill", "none")
+        
+        var tooltip=d3.select("#TSNE")
+            .append("g")
+            .append("div")
+            .attr("class","tooltip")
+            .style("opacity",0)
+            .style("border", "solid")
+            .style("border-width", "1px")
+            .style("border-radius", "5px")
+            .style("padding", "5px");
+
+        function highlight (d) {
+            if (!d) {
+                d3.select(".highlight-point").style("display","none");
+            }else {
+                d3.select(".highlight-point")
+                    .style("display","")
+                    .attr("d",d3.symbol().size(pointSize).type(function() {
+                        if(+d.seq_labels==0) {
+                            return d3.symbolCircle;
+                        }else{
+                            return d3.symbolTriangle;
+                        }}))
+                    .attr("transform",function() {
+                        return `translate(${xScale(eval(d.tsne)[0])},${yScale(eval(d.tsne)[1])})`;})
+                    .style("stroke", "black")
+                    .style("stroke-width", "1px")
+                    .style("stroke-opacity", 1);
+            }
+        }
+        
+        function tooltipDisplay(d) {
+            if (!d) {
+                tooltip.style("opacity", 0);
+            }else {
+                tooltip
+                    .html(`
+                        Action: ${actions[+d.seq_labels]} </br>
+                        Video: ${d.names.slice(2,-1)} </br>
+                        Frame: ${d.steps}/${d.seq_lens-1} </br>
+                        DTW label: ${d.dtw}
+                        `)
+                    .style("opacity", 0.7)
+                    .style("left", d3.event.pageX*0.8 + "px")
+                    .style("top", d3.event.pageY*0.8 + "px");
+            }
+        }
+
+        function mouseMoveHandler() {
+            // get the current mouse position
+            const [mx, my] = d3.mouse(this);
+            const site = voronoiDiagram.find(mx, my, voronoiRadius);
+
+            // highlight the point if we found one
+            highlight(site && site.data);
+            tooltipDisplay(site && site.data);
+        }
+
+        function mouseMoveOut() {
+            highlight(null);
+        }
+
+        body.append("rect")
+            .attr("class", "overlay")
+            .attr("width", maxWidth)
+            .attr("height", maxHeight)
+            .style("fill", "#f00")
+            .style("fill-opacity", 0)
+            .on("mousemove", mouseMoveHandler)
+            .on("mouseleave", mouseMoveOut);
     }
 
     function showData() {
