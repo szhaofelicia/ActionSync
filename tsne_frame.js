@@ -4,7 +4,10 @@ let store={
 const action="bbgame_swing_ball";
 const split="train";
 const date="0815";
-const json_path=`data/${action}_${split}_${date}_200_embs.csv`;
+// const json_path=`data/${action}_${split}_${date}_5000_embs.csv`;
+const json_path=`data/${action}_${split}_${date}_embs_flow_48videos.csv`;
+const image_url="https://baseballgameactivities.s3.us-east-2.amazonaws.com/";
+const activities=["swing","ball"];
 function loadData() {
     return Promise.all([
         d3.csv(json_path)
@@ -81,9 +84,8 @@ function embsScatter(embs) {
         .range([maxHeight,0])
         .domain(d3.extent(embs.map(a=> eval(a.tsne)[1]*1.1)))
     
-    const pointSize=75;
-    const pointOpacity=0.3;
-    const actions=["Swing","Ball"];
+    const pointSize=50; //200:75
+    const pointOpacity=0.5; //200:0.5
 
 
     var points=body.selectAll(".point")
@@ -108,8 +110,8 @@ function embsScatter(embs) {
                 return colorScaleB(d.dtw)
             }
         })
-        .attr("id",function(d,i) {
-            return i.toString();})
+        .attr("id",function(d) {
+            return d.id.toString();})
 
             
     // Add axis
@@ -223,7 +225,7 @@ function embsScatter(embs) {
             .style("text-anchor","start")
             .attr("transform",`translate(${maxWidth+75},${55+i*lg_h*0.15})`)
             .attr("fill","#000000")
-            .text(() => (actions[i]));   
+            .text(() => (activities[i]));   
     }
     // Add legend titles
     body.append("text")
@@ -237,8 +239,9 @@ function embsScatter(embs) {
         .style("text-anchor","start")
         .attr("transform",`translate(${maxWidth+50},${35})`)
         .attr("fill","#000000")
-        .text("Actions"); 
-            
+        .text("Activities"); 
+    
+
     var voronoiDiagram=d3.voronoi(embs)
         .x(d => xScale(eval(d.tsne)[0]))
         .y(d => yScale(eval(d.tsne)[1]))
@@ -302,6 +305,7 @@ function embsScatter(embs) {
                 .style("stroke", "black")
                 .style("stroke-width", "1px")
                 .style("stroke-opacity", 1);
+            
         }
     }
     
@@ -311,10 +315,11 @@ function embsScatter(embs) {
         }else {
             tooltip
                 .html(`
-                    Action: ${actions[+d.seq_labels]} </br>
+                    Action: ${activities[+d.seq_labels]} </br>
                     Video: ${d.names.slice(2,-1)} </br>
                     Frame: ${d.steps}/${d.seq_lens-1} </br>
-                    DTW label: ${d.dtw}
+                    DTW label: ${d.dtw} </br>
+                    Optical flow: ${(+d.flow).toFixed(2)} 
                     `)
                 .style("opacity", 0.7)
                 .style("left",xScale(eval(d.tsne)[0])+margin.left+20+"px")
@@ -341,6 +346,8 @@ function embsScatter(embs) {
 
         // highlight the point if we found one
         clicked(site && site.data);
+        showSelectedImage(embs,+(site && site.data).id);
+
     }
 
     function mouseMoveOut() {
@@ -348,7 +355,7 @@ function embsScatter(embs) {
     }
 
     function resetClick() {
-        d3.select(".selected-point").style("display","none");
+        d3.selectAll(".selected-point").style("display","none");
     }
 
     body.append("rect")
@@ -402,6 +409,11 @@ function embsScatter(embs) {
         lasso.notSelectedItems()
             .style("stroke", "none");
 
+        resetClick(); // deactivate selected point by click
+
+        var centerIdx=CenterPointer(embs,lasso.selectedItems()._groups[0])
+        showSelectedImage(embs,centerIdx);
+
     };
     
     var lasso = d3.lasso()
@@ -416,36 +428,79 @@ function embsScatter(embs) {
     svg.call(lasso);
 }
 
-function displayImage() {
+function CenterPointer(embs,points) {
+    var idxs=points.map(a=>+a.id);
+    var tsnes=[];
+    var total=[0,0];
+    var average=[0,0];
+    var dist=[];
+    for (let i=0;i<idxs.length;i++) {
+        tsnes.push(eval(embs[idxs[i]].tsne));
+        total[0]+=eval(embs[idxs[i]].tsne)[0];
+        total[1]+=eval(embs[idxs[i]].tsne)[1];
+    }
+    average[0]=total[0]/idxs.length;
+    average[1]=total[1]/idxs.length;
+    for (let i=0;i<idxs.length;i++) {
+        let norm_dist=Math.pow(tsnes[i][0]-average[0],2)+Math.pow(tsnes[i][1]-average[1],2);
+        dist.push(norm_dist);
+    }
+
+    return idxs[dist.indexOf(Math.min(...dist))];
+}
+
+function showSelectedImage(embs,idx) {
+    const margin={top:80,bottom:50,left:30,right:30};
+    var frame=embs[idx];
+
     var width=d3.select(".rightview")
         .style("width")
         .slice(0,-2);
-    var height=d3.select(".rightview")
-        .style("height")
-        .slice(0,-2);
-    const margin={top:80,bottom:30,left:100,right:50};
-    const image_url="https://baseballgameactivities.s3.us-east-2.amazonaws.com/";
-
+    // var height=d3.select(".rightview")
+    //     .style("height")
+    //     .slice(0,-2);
+    
     var maxWidth=d3.min([width*0.7,1280]);
     var maxHeight=maxWidth*720/1280;
-
-    var svg=d3.select("#Frame")
+    
+    var svg=d3.select("#Image")
         .attr("width","100%")
         .attr("height","100%");
 
+    function FormatNumberLength(num, length) {
+        var r = "" + num;
+        while (r.length < length) {
+            r = "0" + r;
+        }
+        return r;
+    }
+    var frame_url=image_url+activities[frame.seq_labels]+"/"+frame.names.slice(2,-1)+FormatNumberLength(frame.steps,4)+".jpg";
+
     svg.append("svg:image")
-        .attr("xlink:href",image_url+"ball/1OXKJPPE26HJ0000.jpg")
+        .attr("xlink:href",frame_url)
         .attr("x",margin.left)
         .attr("y",margin.top)
         .attr("width", maxWidth)
         .attr("height", maxHeight);
-    console.log(store.selected_frame);
+    var image_info=svg.append("svg:text")
+        .attr("class","img-info")
+        .attr("x",margin.left)
+        .attr("y",margin.top+maxHeight+margin.bottom)
+        .style("background-color","white");
+    
+
+    svg.select("text.img-info")
+        .text(`
+        Action: ${activities[+frame.seq_labels]}
+        Video: ${frame.names.slice(2,-1)}
+        Frame: ${frame.steps}/${frame.seq_lens-1} 
+        `)
+
 }
 
 function showData() {
     let embs=store.embs_dict;
 
     embsScatter(embs);
-    displayImage();
 }
 loadData().then(showData);
