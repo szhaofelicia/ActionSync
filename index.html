@@ -1,35 +1,59 @@
 <html>
 <head>
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
+    <title> Baseball Game Video Embeddings</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300;0,400;1,300;1,400&display=swap');
         body{
-            font-family: Helvetica, Arial, sans-serif;
+            font-family: 'Open Sans', sans-serif; Helvetica, Arial, sans-serif
+            font-weight: 400;
+            font-size: 12px;
             background-color: white;
+            text-align:center;
+        }
+        html,body{
+            width:auto;
             height:100%;
         }
         
-        h1 {
-            background-color: white;
-            color:black;
-            text-align: center;
-            margin-top: 20px;
-            font-family:Impact,fantasy;
-        }
-
-        h2{
-            background-color: white;
-            color:black;
-            text-align: center;
-        }
         svg{
             border-style:none;
             background-color: white;
         }
 
+        /* @media (min-width: 500px) {
+		  .mainview, .legendview, .sideview {
+			float: left;
+		  }
+		  .mainview {
+			width: 40%;
+		  }
+		  .legendview{
+			width: 20%;
+		  }
+          .sideview {
+			width: 40%;
+		  }
+        } */
+
         .mainview{
+            float:left;
+            width:40%
+        }
+        .sideview{
+            float:left;
+            width:30%;
+            height: 100%;
+        }
+        .legendview{
+            float:left;
+            width:15%;
+        } 
+        /* .leftview{
             position:relative;
             display:flex;
             flex-direction:column;
-            width: 60%;
+            width: 50%;
             height: 100%;
             left: 0%;
             top: 0%;
@@ -42,7 +66,7 @@
             height: 100%;
             left: 60%;
             top: -100%;
-        }
+        } */
         .tooltip {
             position: absolute;
             font-size: 12px;
@@ -72,33 +96,51 @@
         }
 
     </style>
-
-    <script 
-        type='text/javascript' 
-        src="https://d3js.org/d3.v5.min.js"
-        charset="utf-8"
-    >
-    </script>
-    <script src="./d3-lasso.min.js"> </script>
-    <script src="./tsne_frame.js"> </script>
-
 </head>
+
+<script 
+    type='text/javascript' 
+    src="https://d3js.org/d3.v5.min.js"
+    charset="utf-8"
+>
+</script>
+<script src="./d3-lasso.min.js"> </script>
+<script src="./tsne_frame.js"> </script>
+
+    <!-- <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400;1,600;1,700&display=swap" rel="stylesheet">  -->
 
 <body>
     <h1> Baseball Game Video Frame Embeddings</h1>
-    <div class="mainview", id="TSNE">
-        <h2>TSNE </h2>  
+    <div class="mainview", id="tsne">
+        <h2 style="color: #3B3B3B;">TSNE </h2>  
         <svg id="Scatter" ></svg>
     </div>
-    <div class="rightview">
-        <h2>Image </h2>  
+    <div class="legendview", id="legend">
+        <h2 style="color: #3B3B3B;">Action </h2>  
+        <svg id="ActionLegend" ></svg>
+    </div>
+    <div class="sideview">
+        <h2 style="color: #3B3B3B;">Image </h2>  
+        <svg id="Image" >
+            <image id="TheImage">
+        </svg>
+    </div>
+    <div class="mainview">
+        <h2 style="color: #3B3B3B;">density </h2>  
         <svg id="Image" ></svg>
     </div>
 </body>
+
+
 </html>
 
 <!-- 
     color template: 
         123f77 0f86b6 37cae5 f5db73
         2d3505 828227 aa3b00 d6873e
+
+    Distribution: all train set:
+    Interactive tool: selection-- around 5000 data poionts: around 100 videos (30 fps)
+
  -->

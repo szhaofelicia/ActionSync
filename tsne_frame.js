@@ -21,18 +21,15 @@ function embsScatter(embs) {
     var width=d3.select(".mainview")
         .style("width")
         .slice(0,-2);
-    var height=d3.select(".mainview")
-        .style("height")
-        .slice(0,-2);
-    const margin={top:80,bottom:30,left:50,right:50};
+    var height=width;
+    const margin={top:50,bottom:30,left:50,right:50};
 
-    var maxWidth=d3.min([width*0.7,800]);
-    var maxHeight=d3.min([height*0.5,500]);
+    var maxWidth=d3.min([width*0.8,800]);
+    var maxHeight=d3.min([height*0.6,500]);
 
     var svg=d3.select("#Scatter")
-        .attr("width","100%")
-        .attr("height","100%")
-        // .style("font","14px");
+        .attr("width",maxWidth+margin.left+margin.right)
+        .attr("height",maxHeight+margin.top+margin.bottom)
 
     var body=svg.append("g")
         .style("transform",`translate(${margin.left}px,${margin.top}px)`);
@@ -76,6 +73,10 @@ function embsScatter(embs) {
     var colorScaleB=d3.scaleLinear()
         .domain(domainB)
         .range(colorsB);
+    
+    var colorOrd=d3.scaleOrdinal()
+        .range(["#006d2c","#7a0177"])
+        .domain(["Swing","Ball"]);
 
     var xScale=d3.scaleLinear()
         .range([0,maxWidth])
@@ -85,11 +86,15 @@ function embsScatter(embs) {
         .domain(d3.extent(embs.map(a=> eval(a.tsne)[1]*1.1)))
     
     const pointSize=50; //200:75
-    const pointOpacity=0.5; //200:0.5
+    const pointOpacity=.7; //200:0.5
 
-
-    var points=body.selectAll(".point")
-    points.data(embs).enter()
+    //////////////////////////////////////////////////////
+    /////////////////// Scatter Plot /////////////////////
+    //////////////////////////////////////////////////////
+    var points=body.append("g")
+        .attr("class","pointsWrapper");
+    points.selectAll("point")
+        .data(embs).enter()
         .append("path")
         .attr("class","point")
         .attr("d",d3.symbol().size(pointSize).type(function(d) {
@@ -112,7 +117,7 @@ function embsScatter(embs) {
         })
         .attr("id",function(d) {
             return d.id.toString();})
-
+        .attr("visibility","visible")
             
     // Add axis
     var axisX=d3.axisBottom(xScale).tickSize(0);
@@ -160,16 +165,106 @@ function embsScatter(embs) {
     svg.select("#axisY path.domain")
         .attr("marker-end","url(#arrowhead-top)");
     
-    // Add colorbars
+    //////////////////////////////////////////////////////
+    /////////////////// Action Legend ////////////////////
+    //////////////////////////////////////////////////////
+    // Legend SVG
+    var legendWidth=d3.select(".legendview")
+        .style("width")
+        .slice(0,-2);
+    var svgLegend=d3.select("#ActionLegend")
+        .attr("width",legendWidth)
+        .attr("height",maxHeight+margin.top+margin.bottom)
+    var legendWrapper=svgLegend.append("g").attr("class", "legendWrapper")
+        .style("transform",`translate(${margin.left}px,${margin.top*.5}px)`);
+
+    const marker_h=25;
     const lg_w=20;
     const lg_h=150;
+    
+    ///////////////////////////////////////////////////////////////////////////
+    ////////////////// Hover & Click functions for legend /////////////////////
+    ///////////////////////////////////////////////////////////////////////////
+
+    //Decrease opacity of non selected circles when hovering in the legend	
+    function selectLegend(opacity) {
+        return function(d, i) {
+            var chosen =i;
+                
+            body.selectAll(".point")
+                .filter(function(d) { return d.seq_labels != chosen; })
+                .transition()
+                .style("opacity", opacity);
+        };
+    }//function selectLegend
+
+    //Function to show only the circles for the clicked sector in the legend
+    function clickLegend(d,i) {
+        
+        event.stopPropagation();
+
+        //deactivate the mouse over and mouse out events
+        d3.selectAll(".legendMarker")
+            .on("mouseover", null)
+            .on("mouseout", null);
+            
+        //Chosen legend item
+        var chosen = i;
+                
+        //Only show the circles of the chosen sector
+        body.selectAll(".point")
+            .style("opacity", pointOpacity)
+            .style("visibility", function(d) {
+                if (d.seq_labels != chosen) return "hidden";
+                else return "visible";
+            });
+                
+    }//sectorClick
+
+    var actionLegend=legendWrapper.selectAll(".legendMarker")  	
+        .data(colorOrd.range())                              
+        .enter().append("g")   
+        .attr("class", "legendMarker") 
+        .attr("transform", function(d,i) { return "translate(" + 10 + "," + (i * marker_h) + ")"; })
+        .style("cursor", "pointer")
+        .on("mouseover", selectLegend(0.02))
+        .on("mouseout", selectLegend(pointOpacity))
+        .on("click", clickLegend);
+    
+    actionLegend.append("path")
+        .attr("id","marker"+i)
+        .attr("d",d3.symbol().size("150").type(function(d,i) {
+            if (i==0) {
+                return d3.symbolCircle;
+            }else {
+                return d3.symbolTriangle;
+            }
+        }))
+        .attr("width",lg_w)
+        .attr("height",marker_h)
+        .attr("fill", function(d) {return d;})
+        .attr("fill-opacity",pointOpacity);
+
+    actionLegend.append("text")
+        .style("font-size","12px")
+        .style("text-anchor","start")
+        .attr("transform", function(d,i) { return `translate(${30},${i*marker_h*0.2})`;})
+        .attr("fill","#1A1A1A")
+        .text(function (d,i) { return colorOrd.domain()[i]; }); 
+
+        
+    //////////////////////////////////////////////////////
+    ///////////////////// Colorbars //////////////////////
+    //////////////////////////////////////////////////////
+
     var lg_x;
     var lg_y;
     var defs=svg.append("defs");
     var linearGradient;
+
     for(var i=0;i<2;i++) {
-        lg_x=maxWidth+i*lg_w*2.5+50;
-        lg_y=maxHeight-lg_h;
+        lg_x=i*lg_w*2.5;
+        lg_y=100+lg_h*.5;
 
         linearGradient=defs.append("linearGradient")
             .attr("id","linear-gradient-"+i);
@@ -190,7 +285,8 @@ function embsScatter(embs) {
             .attr("offset", function(d) { return d.offset; })
             .attr("stop-color", function(d) { return d.color; });
 
-        body.append("rect")
+        legendWrapper
+            .append("rect")
             .attr("x",lg_x)
             .attr("y",lg_y)
             .attr("width",lg_w)
@@ -201,53 +297,30 @@ function embsScatter(embs) {
         let colorBarDomain=domains[i].map(d=>d.toFixed(0));
         let colorBardRange=[lg_h,lg_h*0.75,lg_h*0.5,lg_h*0.25,0];
         
-        body.append("g")
+        legendWrapper.append("g")
             .attr("transform",`translate(${lg_x+lg_w},${lg_y})`)
             .call(d3.axisRight(d3.scaleOrdinal().domain(colorBarDomain).range(colorBardRange)));
-        
-        // Action legend
-        body.append("path")
-            .attr("id","marker"+i)
-            .attr("d",d3.symbol().size("150").type(function() {
-                if (i==0) {
-                    return d3.symbolCircle;
-                }else {
-                    return d3.symbolTriangle;
-                }
-            }))
-            .attr("transform",`translate(${maxWidth+60},${50+i*lg_h*0.15})`)
-            .attr("width",lg_w)
-            .attr("height",lg_h*0.25)
-            .attr("fill",colors[i][4])
-            .attr("fill-opacity",pointOpacity)
-        body.append("text")
-            .style("font-size","12px")
-            .style("text-anchor","start")
-            .attr("transform",`translate(${maxWidth+75},${55+i*lg_h*0.15})`)
-            .attr("fill","#000000")
-            .text(() => (activities[i]));   
     }
-    // Add legend titles
-    body.append("text")
+
+    legendWrapper.append("text")
         .style("font-size","14px")
         .style("text-anchor","start")
-        .attr("transform",`translate(${maxWidth+50},${lg_y-10})`)
-        .attr("fill","#000000")
+        .attr("transform",`translate(${0},${lg_y-10})`) 
+        .attr("fill","#1A1A1A")
         .text("DTW Order");   
-    body.append("text")
-        .style("font-size","14px")
-        .style("text-anchor","start")
-        .attr("transform",`translate(${maxWidth+50},${35})`)
-        .attr("fill","#000000")
-        .text("Activities"); 
-    
+
+    //////////////////////////////////////////////////////
+    ///////////////// Scatter selection //////////////////
+    //////////////////////////////////////////////////////
+    const voronoiRadius=maxWidth/30;
 
     var voronoiDiagram=d3.voronoi(embs)
         .x(d => xScale(eval(d.tsne)[0]))
         .y(d => yScale(eval(d.tsne)[1]))
         .size([maxWidth,maxHeight])(embs);
-    
-    const voronoiRadius=maxWidth/30;
+
+    // var voronoiGroup=body.append("g")
+    //     .attr("class", "voronoiWrapper");
     
     body.append("path")
         .attr("class","highlight-point")
@@ -259,7 +332,7 @@ function embsScatter(embs) {
         .style("display","none")
         .style("fill", "none")
     
-    var tooltip=d3.select("#TSNE")
+    var tooltip=d3.select("#tsne")
         .append("g")
         .append("div")
         .attr("class","tooltip")
@@ -346,7 +419,7 @@ function embsScatter(embs) {
 
         // highlight the point if we found one
         clicked(site && site.data);
-        showSelectedImage(embs,+(site && site.data).id);
+        showSelectedImage(embs,+(site && site.data).id,true);
 
     }
 
@@ -356,6 +429,21 @@ function embsScatter(embs) {
 
     function resetClick() {
         d3.selectAll(".selected-point").style("display","none");
+
+        d3.selectAll(".legendMarker")
+            .on("mouseover", selectLegend(0.02))
+            .on("mouseout", selectLegend(pointOpacity));
+
+        body.selectAll(".point")
+            .style("opacity", pointOpacity)
+            .style("visibility", "visible");
+        
+        var img = document.getElementById("TheImage");
+        if (img) {
+            img.style.visibility="hidden";
+            console.log(img);
+        }
+
     }
 
     body.append("rect")
@@ -368,7 +456,9 @@ function embsScatter(embs) {
         .on("mouseleave", mouseMoveOut)            
         .on("click",mouseClickHandler);
 
-    d3.select("#Scatter").on("click", resetClick);
+    // d3.select("#Scatter").on("click", resetClick);
+    d3.select("#ActionLegend").on("click", resetClick);
+
 
     // Lasso functions
     var lasso_start = function() {
@@ -412,7 +502,7 @@ function embsScatter(embs) {
         resetClick(); // deactivate selected point by click
 
         var centerIdx=CenterPointer(embs,lasso.selectedItems()._groups[0])
-        showSelectedImage(embs,centerIdx);
+        showSelectedImage(embs,centerIdx,true);
 
     };
     
@@ -449,23 +539,21 @@ function CenterPointer(embs,points) {
     return idxs[dist.indexOf(Math.min(...dist))];
 }
 
-function showSelectedImage(embs,idx) {
-    const margin={top:80,bottom:50,left:30,right:30};
+function showSelectedImage(embs,idx,visible) {
+    const margin={top:50,bottom:30,left:50,right:50};
     var frame=embs[idx];
 
-    var width=d3.select(".rightview")
+    var width=d3.select(".sideview")
         .style("width")
         .slice(0,-2);
-    // var height=d3.select(".rightview")
-    //     .style("height")
-    //     .slice(0,-2);
-    
-    var maxWidth=d3.min([width*0.7,1280]);
-    var maxHeight=maxWidth*720/1280;
+    var height=width;
+
+    var maxWidth=d3.min([width*0.8,800]);
+    var maxHeight=d3.min([height*0.6,500]);
     
     var svg=d3.select("#Image")
-        .attr("width","100%")
-        .attr("height","100%");
+        .attr("width",maxWidth+margin.left+margin.right)
+        .attr("height",maxHeight+margin.top+margin.bottom);
 
     function FormatNumberLength(num, length) {
         var r = "" + num;
@@ -475,18 +563,21 @@ function showSelectedImage(embs,idx) {
         return r;
     }
     var frame_url=image_url+activities[frame.seq_labels]+"/"+frame.names.slice(2,-1)+FormatNumberLength(frame.steps,4)+".jpg";
+    // var frame_url="/media/felicia/Data/mlb-youtube"+activities[frame.seq_labels]+"_videos/rm_noise/frames/"+frame.names.slice(2,-1)+FormatNumberLength(frame.steps,4)+".jpg";
 
-    svg.append("svg:image")
+    svg.select("#TheImage")
         .attr("xlink:href",frame_url)
         .attr("x",margin.left)
-        .attr("y",margin.top)
+        .attr("y",0)
         .attr("width", maxWidth)
-        .attr("height", maxHeight);
-    var image_info=svg.append("svg:text")
-        .attr("class","img-info")
-        .attr("x",margin.left)
-        .attr("y",margin.top+maxHeight+margin.bottom)
-        .style("background-color","white");
+        .attr("height", maxHeight)
+        .style("visibility","visible")
+
+    // var image_info=svg.append("svg:text")
+    //     .attr("class","img-info")
+    //     .attr("x",margin.left)
+    //     .attr("y",margin.top+maxHeight+margin.bottom)
+    //     .style("background-color","white");
     
 
     svg.select("text.img-info")
@@ -495,6 +586,7 @@ function showSelectedImage(embs,idx) {
         Video: ${frame.names.slice(2,-1)}
         Frame: ${frame.steps}/${frame.seq_lens-1} 
         `)
+
 
 }
 
