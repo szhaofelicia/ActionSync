@@ -27,7 +27,7 @@ function embsScatter(embs) {
     var maxWidth=d3.min([width*0.8,800]);
     var maxHeight=d3.min([height*0.6,500]);
 
-    var svg=d3.select("#Scatter")
+    var svg=d3.select("#scatter")
         .attr("width",maxWidth+margin.left+margin.right)
         .attr("height",maxHeight+margin.top+margin.bottom)
 
@@ -164,6 +164,13 @@ function embsScatter(embs) {
         .call(axisY)
     svg.select("#axisY path.domain")
         .attr("marker-end","url(#arrowhead-top)");
+
+        
+    //////////////////////////////////////////////////////
+    /////////////////// Opacity Slider ////////////////////
+    //////////////////////////////////////////////////////
+
+    // slider = html`<input type=range>`
     
     //////////////////////////////////////////////////////
     /////////////////// Action Legend ////////////////////
@@ -172,7 +179,7 @@ function embsScatter(embs) {
     var legendWidth=d3.select(".legendview")
         .style("width")
         .slice(0,-2);
-    var svgLegend=d3.select("#ActionLegend")
+    var svgLegend=d3.select("#actionLegend")
         .attr("width",legendWidth)
         .attr("height",maxHeight+margin.top+margin.bottom)
     var legendWrapper=svgLegend.append("g").attr("class", "legendWrapper")
@@ -225,7 +232,7 @@ function embsScatter(embs) {
         .data(colorOrd.range())                              
         .enter().append("g")   
         .attr("class", "legendMarker") 
-        .attr("transform", function(d,i) { return "translate(" + 10 + "," + (i * marker_h) + ")"; })
+        .attr("transform", function(d,i) { return "translate(" + 10 + "," + (70+i * marker_h) + ")"; })
         .style("cursor", "pointer")
         .on("mouseover", selectLegend(0.02))
         .on("mouseout", selectLegend(pointOpacity))
@@ -248,9 +255,16 @@ function embsScatter(embs) {
     actionLegend.append("text")
         .style("font-size","12px")
         .style("text-anchor","start")
-        .attr("transform", function(d,i) { return `translate(${30},${i*marker_h*0.2})`;})
+        .attr("transform", function(d,i) { return `translate(${30},${5})`;})
         .attr("fill","#1A1A1A")
         .text(function (d,i) { return colorOrd.domain()[i]; }); 
+    
+    legendWrapper.append("text")
+        .style("font-size","14px")
+        .style("text-anchor","start")
+        .attr("transform",`translate(${0},${50})`) 
+        .attr("fill","#1A1A1A")
+        .text("Activities");   
 
         
     //////////////////////////////////////////////////////
@@ -438,7 +452,7 @@ function embsScatter(embs) {
             .style("opacity", pointOpacity)
             .style("visibility", "visible");
         
-        var img = document.getElementById("TheImage");
+        var img = document.getElementById("theImage");
         if (img) {
             img.style.visibility="hidden";
             console.log(img);
