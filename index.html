@@ -21,21 +21,6 @@
             background-color: white;
         }
 
-        /* @media (min-width: 500px) {
-		  .mainview, .legendview, .sideview {
-			float: left;
-		  }
-		  .mainview {
-			width: 40%;
-		  }
-		  .legendview{
-			width: 20%;
-		  }
-          .sideview {
-			width: 40%;
-		  }
-        } */
-
         .mainview{
             float:left;
             width:40%
@@ -49,24 +34,7 @@
             float:left;
             width:15%;
         } 
-        /* .leftview{
-            position:relative;
-            display:flex;
-            flex-direction:column;
-            width: 50%;
-            height: 100%;
-            left: 0%;
-            top: 0%;
-        }
-        .rightview{
-            position:relative;
-            display:flex;
-            flex-direction:column;
-            width: 40%;
-            height: 100%;
-            left: 60%;
-            top: -100%;
-        } */
+
         .tooltip {
             position: absolute;
             font-size: 12px;
@@ -95,6 +63,37 @@
             fill-opacity:.5;
         }
 
+        .slider {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 25px;
+            background: #d3d3d3;
+            outline: none;
+            opacity: 0.7;
+            -webkit-transition: .2s;
+            transition: opacity .2s;
+        }
+
+        .slider:hover {
+            opacity: 1;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 25px;
+            height: 30px;
+            background: #0f86b6;
+            cursor: pointer;
+        }
+
+        .slider::-moz-range-thumb {
+            width: 25px;
+            height: 25px;
+            background: #0f86b6;
+            cursor: pointer;
+        }
+
     </style>
 </head>
 
@@ -114,16 +113,18 @@
     <h1> Baseball Game Video Frame Embeddings</h1>
     <div class="mainview", id="tsne">
         <h2 style="color: #3B3B3B;">TSNE </h2>  
-        <svg id="Scatter" ></svg>
+        <svg id="scatter" ></svg>
     </div>
     <div class="legendview", id="legend">
-        <h2 style="color: #3B3B3B;">Action </h2>  
-        <svg id="ActionLegend" ></svg>
+        <div class="slidecontainer">
+            <input type="range" min="1" max="100" value="50" class="slider", id="opacitySlider">
+        </div>
+        <svg id="actionLegend" ></svg>
     </div>
     <div class="sideview">
         <h2 style="color: #3B3B3B;">Image </h2>  
         <svg id="Image" >
-            <image id="TheImage">
+            <image id="theImage">
         </svg>
     </div>
     <div class="mainview">
@@ -142,5 +143,24 @@
 
     Distribution: all train set:
     Interactive tool: selection-- around 5000 data poionts: around 100 videos (30 fps)
+
+        /* .leftview{
+            position:relative;
+            display:flex;
+            flex-direction:column;
+            width: 50%;
+            height: 100%;
+            left: 0%;
+            top: 0%;
+        }
+        .rightview{
+            position:relative;
+            display:flex;
+            flex-direction:column;
+            width: 40%;
+            height: 100%;
+            left: 60%;
+            top: -100%;
+        } */
 
  -->
