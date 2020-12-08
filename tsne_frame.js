@@ -86,7 +86,21 @@ function embsScatter(embs) {
         .domain(d3.extent(embs.map(a=> eval(a.tsne)[1]*1.1)))
     
     const pointSize=50; //200:75
-    const pointOpacity=.7; //200:0.5
+    //////////////////////////////////////////////////////
+    /////////////////// Opacity Slider ////////////////////
+    //////////////////////////////////////////////////////
+
+    // const pointOpacity=1;
+    var slider=document.getElementById("opacitySlider");
+    var output = document.getElementById("outputVar");
+    var pointOpacity;
+    // let update= ()=> pointOpacity=slider.value/100;
+    let update = () => {
+        output.innerHTML = slider.value+"%";
+        pointOpacity=+slider.value/100;
+    }
+    slider.addEventListener("input",update);
+    update();
 
     //////////////////////////////////////////////////////
     /////////////////// Scatter Plot /////////////////////
@@ -165,13 +179,6 @@ function embsScatter(embs) {
     svg.select("#axisY path.domain")
         .attr("marker-end","url(#arrowhead-top)");
 
-        
-    //////////////////////////////////////////////////////
-    /////////////////// Opacity Slider ////////////////////
-    //////////////////////////////////////////////////////
-
-    // slider = html`<input type=range>`
-    
     //////////////////////////////////////////////////////
     /////////////////// Action Legend ////////////////////
     //////////////////////////////////////////////////////
@@ -250,7 +257,7 @@ function embsScatter(embs) {
         .attr("width",lg_w)
         .attr("height",marker_h)
         .attr("fill", function(d) {return d;})
-        .attr("fill-opacity",pointOpacity);
+        .attr("fill-opacity",1);
 
     actionLegend.append("text")
         .style("font-size","12px")
@@ -455,7 +462,6 @@ function embsScatter(embs) {
         var img = document.getElementById("theImage");
         if (img) {
             img.style.visibility="hidden";
-            console.log(img);
         }
 
     }
@@ -576,16 +582,28 @@ function showSelectedImage(embs,idx,visible) {
         }
         return r;
     }
-    var frame_url=image_url+activities[frame.seq_labels]+"/"+frame.names.slice(2,-1)+FormatNumberLength(frame.steps,4)+".jpg";
-    // var frame_url="/media/felicia/Data/mlb-youtube"+activities[frame.seq_labels]+"_videos/rm_noise/frames/"+frame.names.slice(2,-1)+FormatNumberLength(frame.steps,4)+".jpg";
 
-    svg.select("#TheImage")
-        .attr("xlink:href",frame_url)
-        .attr("x",margin.left)
-        .attr("y",0)
-        .attr("width", maxWidth)
-        .attr("height", maxHeight)
-        .style("visibility","visible")
+    if (frame) {
+        var frame_url=image_url+activities[frame.seq_labels]+"/"+frame.names.slice(2,-1)+FormatNumberLength(frame.steps,4)+".jpg";
+        // var frame_url="/media/felicia/Data/mlb-youtube"+activities[frame.seq_labels]+"_videos/rm_noise/frames/"+frame.names.slice(2,-1)+FormatNumberLength(frame.steps,4)+".jpg";
+    
+        svg.select("#TheImage")
+            .attr("xlink:href",frame_url)
+            .attr("x",margin.left)
+            .attr("y",0)
+            .attr("width", maxWidth)
+            .attr("height", maxHeight)
+            .style("visibility","visible")
+        
+        svg.select("text.img-info")
+            .text(`
+            Action: ${activities[+frame.seq_labels]}
+            Video: ${frame.names.slice(2,-1)}
+            Frame: ${frame.steps}/${frame.seq_lens-1} 
+            `)
+    
+    }
+
 
     // var image_info=svg.append("svg:text")
     //     .attr("class","img-info")
@@ -594,12 +612,6 @@ function showSelectedImage(embs,idx,visible) {
     //     .style("background-color","white");
     
 
-    svg.select("text.img-info")
-        .text(`
-        Action: ${activities[+frame.seq_labels]}
-        Video: ${frame.names.slice(2,-1)}
-        Frame: ${frame.steps}/${frame.seq_lens-1} 
-        `)
 
 
 }
