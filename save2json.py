@@ -2,6 +2,7 @@ import numpy as np
 import json
 import csv
 import random
+import pandas as pd
 
 action='bbgame_swing_ball'
 split='train'
@@ -121,3 +122,47 @@ with open(csv_path%(action,split,date),'w') as csvfile:
     writer.writeheader()
     for data in csv_data:
         writer.writerow(data)
+
+
+
+################### patch ######################
+
+patch_time='11-10-20-48'
+patch_dir="/media/felicia/Data/object_detection/patch/swing/patch_dict_%s.npy"%patch_time
+
+patch_dict= np.load(patch_dir,allow_pickle=True)
+patch_dict=patch_dict.item()
+
+
+action='bbgame_swing_ball'
+split='train'
+date='0815'
+csv_path='data/%s_%s_%s_embs_flow_48videos.csv'%(action,split,date)
+
+new_path='data/%s_%s_%s_embs_flow_48video_patch.csv'%(action,split,date)
+
+
+embs_df=pd.read_csv(csv_path,header=0)
+embs_data=embs_df.values
+
+nembs=len(embs_data)
+left=[]
+right=[]
+
+for i in range(nembs):
+    if embs_data[i][-3]==0:
+        step=int(embs_data[i][5]//3)
+        key='%s_%s'%(embs_data[i][3][2:-1],"{:02d}".format(step))
+        l,r,t,b=list(map(int, patch_dict[key]['left']))
+        left.append([l,t])
+
+        l,r,t,b=list(map(int, patch_dict[key]['right']))
+        right.append([l,t])
+    else:
+        left.append([0,160])
+        right.append([720,60])
+
+embs_df['left']=left
+embs_df['right']=right
+
+embs_df.to_csv(new_path, index=False)
