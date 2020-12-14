@@ -5,7 +5,7 @@ const action="bbgame_swing_ball";
 const split="train";
 const date="0815";
 // const json_path=`data/${action}_${split}_${date}_5000_embs.csv`;
-const json_path=`data/${action}_${split}_${date}_embs_flow_48videos.csv`;
+const json_path=`data/${action}_${split}_${date}_embs_flow_48video_patch.csv`;
 const image_url="https://baseballgameactivities.s3.us-east-2.amazonaws.com/";
 const activities=["swing","ball"];
 function loadData() {
@@ -25,7 +25,7 @@ function embsScatter(embs) {
     const margin={top:50,bottom:30,left:50,right:50};
 
     var maxWidth=d3.min([width*0.8,800]);
-    var maxHeight=d3.min([height*0.6,500]);
+    var maxHeight=maxWidth*0.6;
 
     var svg=d3.select("#scatter")
         .attr("width",maxWidth+margin.left+margin.right)
@@ -87,17 +87,17 @@ function embsScatter(embs) {
     
     const pointSize=50; //200:75
     //////////////////////////////////////////////////////
-    /////////////////// Opacity Slider ////////////////////
+    /////////////////// Opacity Slider ///////////////////
     //////////////////////////////////////////////////////
 
     // const pointOpacity=1;
     var slider=document.getElementById("opacitySlider");
     var output = document.getElementById("outputVar");
-    var pointOpacity;
+    let pointOpacity;
     // let update= ()=> pointOpacity=slider.value/100;
     let update = () => {
         output.innerHTML = slider.value+"%";
-        pointOpacity=+slider.value/100;
+        pointOpacity=slider.value/100;
     }
     slider.addEventListener("input",update);
     update();
@@ -463,6 +463,9 @@ function embsScatter(embs) {
         if (img) {
             img.style.visibility="hidden";
         }
+        var myCanvas=document.getElementById("theCanvas")
+        var ctx=myCanvas.getContext("2d");
+        ctx.clearRect(0, 0, myCanvas.width, myCanvas.height);
 
     }
 
@@ -558,9 +561,8 @@ function CenterPointer(embs,points) {
 
     return idxs[dist.indexOf(Math.min(...dist))];
 }
-
-function showSelectedImage(embs,idx,visible) {
-    const margin={top:50,bottom:30,left:50,right:50};
+function showSelectedImage(embs,idx) {
+    const margin={top:50,bottom:30,left:20,right:20};
     var frame=embs[idx];
 
     var width=d3.select(".sideview")
@@ -568,12 +570,32 @@ function showSelectedImage(embs,idx,visible) {
         .slice(0,-2);
     var height=width;
 
-    var maxWidth=d3.min([width*0.8,800]);
+    var maxWidth=d3.min([width-margin.left-margin.right,800]);
     var maxHeight=d3.min([height*0.6,500]);
-    
-    var svg=d3.select("#Image")
-        .attr("width",maxWidth+margin.left+margin.right)
-        .attr("height",maxHeight+margin.top+margin.bottom);
+
+    var imgWidth=maxWidth*0.65;
+    var imgHeight=maxHeight*0.6+5;
+
+    var patchWidth=maxWidth*0.25;
+    var patchHeight=maxHeight*0.3;
+
+    var myImg=document.getElementById("theImage");
+    myImg.width=imgWidth;
+    myImg.height=imgHeight;
+    myImg.style.top=margin.top+"px";
+    myImg.style.left=margin.left+"px";
+    // myImg.style.border="2px solid #021a40";
+
+    var myCanvas=document.getElementById("theCanvas");
+    myCanvas.width=patchWidth;
+    myCanvas.height=patchHeight*2+5;
+    myCanvas.style.top=margin.top+"px";
+    myCanvas.style.left=margin.left+imgWidth+"px";
+
+    var ratioW=patchWidth/450;
+    var ratioH=patchHeight/500;
+
+    var ctx=myCanvas.getContext("2d");
 
     function FormatNumberLength(num, length) {
         var r = "" + num;
@@ -585,35 +607,15 @@ function showSelectedImage(embs,idx,visible) {
 
     if (frame) {
         var frame_url=image_url+activities[frame.seq_labels]+"/"+frame.names.slice(2,-1)+FormatNumberLength(frame.steps,4)+".jpg";
-        // var frame_url="/media/felicia/Data/mlb-youtube"+activities[frame.seq_labels]+"_videos/rm_noise/frames/"+frame.names.slice(2,-1)+FormatNumberLength(frame.steps,4)+".jpg";
-    
-        svg.select("#TheImage")
-            .attr("xlink:href",frame_url)
-            .attr("x",margin.left)
-            .attr("y",0)
-            .attr("width", maxWidth)
-            .attr("height", maxHeight)
-            .style("visibility","visible")
-        
-        svg.select("text.img-info")
-            .text(`
-            Action: ${activities[+frame.seq_labels]}
-            Video: ${frame.names.slice(2,-1)}
-            Frame: ${frame.steps}/${frame.seq_lens-1} 
-            `)
-    
+        myImg.src=frame_url;
+        myImg.style.visibility="visible";
+        var posi={ll:eval(frame.left)[0],lt:eval(frame.left)[1],rl:eval(frame.right)[0],rt:eval(frame.right)[1]}
+         
+        myImg.onload= function() {
+            ctx.drawImage(myImg,posi.ll,posi.lt,500,450,0,0,patchWidth,patchHeight);
+            ctx.drawImage(myImg,posi.rl,posi.rt,500,450,0,patchHeight+5,patchWidth,patchHeight);
+        }
     }
-
-
-    // var image_info=svg.append("svg:text")
-    //     .attr("class","img-info")
-    //     .attr("x",margin.left)
-    //     .attr("y",margin.top+maxHeight+margin.bottom)
-    //     .style("background-color","white");
-    
-
-
-
 }
 
 function showData() {
