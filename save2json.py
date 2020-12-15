@@ -166,3 +166,95 @@ embs_df['left']=left
 embs_df['right']=right
 
 embs_df.to_csv(new_path, index=False)
+
+
+################### patch ######################
+
+action='bbgame_swing_ball'
+split='train'
+date='0815'
+
+embs_path='/media/felicia/Data/tcc_results/multi_class/%s_%s_%s_embs.npy'
+embs_dict= np.load(embs_path%(action,split,date),allow_pickle=True)
+embs_dict=embs_dict.item()
+
+pca_list=embs_dict['pca'].tolist()
+np_tsne=embs_dict['tsne'].tolist()
+names_list= embs_dict['names'].tolist()
+seq_lens_list= embs_dict['seq_lens'].tolist()
+steps_list=embs_dict['steps'].tolist()
+dtw_align=embs_dict['dtw'].tolist()
+seq_labels_list=embs_dict['seq_labels'].tolist() # multi-class
+
+nframes=len(np_tsne)
+csv_data=[]
+
+# for i in range(nframes):
+#     temp_dict={}
+#     if seq_labels_list[i]==0: ## swing
+#         temp_dict['x']=np_tsne[i][0]
+#         temp_dict['y']=np_tsne[i][1]
+#         temp_dict['dtw']=dtw_align[i]
+#         temp_dict['domain']="image"
+#         csv_data.append(temp_dict)
+# csv_columns=csv_data[0].keys()
+
+for i in range(nframes):
+    temp_dict={}
+    if seq_labels_list[i]==0: ## swing
+        temp_dict['x']=pca_list[i][0]
+        temp_dict['y']=pca_list[i][1]
+        temp_dict['dtw']=dtw_align[i]
+        temp_dict['domain']="image"
+        csv_data.append(temp_dict)
+csv_columns=csv_data[0].keys()
+
+
+patch_dir='/media/felicia/Data/tcc_results/multi_class/%s_%s_%s_embs.npy'%("bbgame_swing_patch",split,"1119")
+
+patch_dict= np.load(patch_dir,allow_pickle=True)
+patch_dict=patch_dict.item()
+
+pca_list=patch_dict['pca'].tolist()
+np_tsne=patch_dict['tsne'].tolist()
+names_list= patch_dict['names'].tolist()
+seq_lens_list= patch_dict['seq_lens'].tolist()
+steps_list=patch_dict['steps'].tolist()
+dtw_align=patch_dict['dtw'].tolist()
+seq_labels_list=patch_dict['seq_labels'].tolist() # multi-class
+
+# for i in range(len(np_tsne)):
+#     temp_dict={}
+#     temp_dict['x']=np_tsne[i][0]
+#     temp_dict['y']=np_tsne[i][1]
+#     temp_dict['dtw']=dtw_align[i]
+#     if seq_labels_list[i]==0: ## swing
+#         temp_dict['domain']="left"
+#     else:
+#         temp_dict['domain']="right"
+#     csv_data.append(temp_dict)
+
+for i in range(len(np_tsne)):
+    temp_dict={}
+    temp_dict['x']=pca_list[i][0]
+    temp_dict['y']=pca_list[i][1]
+    temp_dict['dtw']=dtw_align[i]
+    if seq_labels_list[i]==0: ## swing
+        temp_dict['domain']="left"
+    else:
+        temp_dict['domain']="right"
+    csv_data.append(temp_dict)
+
+# csv_path='data/bbgame_swing_multiple_%s_%s_tsne_dtw.csv'%(split,date)
+# with open(csv_path,'w') as csvfile:
+#     writer=csv.DictWriter(csvfile,fieldnames=csv_columns)
+#     writer.writeheader()
+#     for data in csv_data:
+#         writer.writerow(data)
+
+csv_path='data/bbgame_swing_multiple_%s_%s_pca_dtw.csv'%(split,date)
+with open(csv_path,'w') as csvfile:
+    writer=csv.DictWriter(csvfile,fieldnames=csv_columns)
+    writer.writeheader()
+    for data in csv_data:
+        writer.writerow(data)

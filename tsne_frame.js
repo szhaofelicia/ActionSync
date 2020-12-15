@@ -5,31 +5,36 @@ const action="bbgame_swing_ball";
 const split="train";
 const date="0815";
 // const json_path=`data/${action}_${split}_${date}_5000_embs.csv`;
-const json_path=`data/${action}_${split}_${date}_embs_flow_48video_patch.csv`;
+const scatter_path=`data/${action}_${split}_${date}_embs_flow_48video_patch.csv`;
+const hist_path=`data/bbgame_swing_multiple_${split}_${date}_pca_dtw.csv`;
 const image_url="https://baseballgameactivities.s3.us-east-2.amazonaws.com/";
 const activities=["swing","ball"];
+const featureDomains=["image","left","right"];
 function loadData() {
     return Promise.all([
-        d3.csv(json_path)
+        d3.csv(scatter_path),
+        d3.csv(hist_path)
     ]).then(datasets =>{
-        store.embs_dict=datasets[0];
+        store.scatter_dict=datasets[0];
+        store.swing_dict=datasets[1];
         return store;
     })
 }
 
 function embsScatter(embs) {
-    var width=d3.select(".mainview")
+    var width=d3.select(".leftview")
         .style("width")
         .slice(0,-2);
-    var height=width;
+    // var height=width;
     const margin={top:50,bottom:30,left:50,right:50};
 
+
     var maxWidth=d3.min([width*0.8,800]);
-    var maxHeight=maxWidth*0.6;
+    var maxHeight=d3.min([width*0.5,400]);
 
     var svg=d3.select("#scatter")
-        .attr("width",maxWidth+margin.left+margin.right)
-        .attr("height",maxHeight+margin.top+margin.bottom)
+        .style("width",maxWidth+margin.left+margin.right)
+        .style("height",maxHeight+margin.top+margin.bottom)
 
     var body=svg.append("g")
         .style("transform",`translate(${margin.left}px,${margin.top}px)`);
@@ -92,7 +97,7 @@ function embsScatter(embs) {
 
     // const pointOpacity=1;
     var slider=document.getElementById("opacitySlider");
-    var output = document.getElementById("outputVar");
+    var output = document.getElementById("opacityOutput");
     let pointOpacity;
     // let update= ()=> pointOpacity=slider.value/100;
     let update = () => {
@@ -133,7 +138,9 @@ function embsScatter(embs) {
             return d.id.toString();})
         .attr("visibility","visible")
             
-    // Add axis
+    //////////////////////////////////////////////////////
+    //////////////// Scatter Plot Axis ///////////////////
+    //////////////////////////////////////////////////////
     var axisX=d3.axisBottom(xScale).tickSize(0);
     var axisY=d3.axisLeft(yScale).tickSize(0);
 
@@ -171,6 +178,14 @@ function embsScatter(embs) {
     svg.select("#axisX path.domain")
         .attr("marker-end","url(#arrowhead-right)");
 
+    svg.append("text")
+        .style("font-size","14px")
+        .style("text-anchor","start")
+        .attr("x",(margin.left+maxWidth)*.5)
+        .attr("y",margin.top+maxHeight+30)
+        .attr("fill","#1A1A1A")
+        .text("x");  
+
     svg.append("g")
         .attr("id","axisY")
         .style("font","12px")
@@ -178,6 +193,15 @@ function embsScatter(embs) {
         .call(axisY)
     svg.select("#axisY path.domain")
         .attr("marker-end","url(#arrowhead-top)");
+    
+    svg.append("text")
+        .style("font-size","14px")
+        .style("text-anchor","start")
+        .attr("x",15)
+        .attr("y",(margin.top+maxHeight)*0.5)
+        .attr("fill","#1A1A1A")
+        .text("y");  
+    
 
     //////////////////////////////////////////////////////
     /////////////////// Action Legend ////////////////////
@@ -187,8 +211,8 @@ function embsScatter(embs) {
         .style("width")
         .slice(0,-2);
     var svgLegend=d3.select("#actionLegend")
-        .attr("width",legendWidth)
-        .attr("height",maxHeight+margin.top+margin.bottom)
+        .style("width",legendWidth)
+        .style("height",maxHeight+margin.top+margin.bottom)
     var legendWrapper=svgLegend.append("g").attr("class", "legendWrapper")
         .style("transform",`translate(${margin.left}px,${margin.top*.5}px)`);
 
@@ -262,7 +286,7 @@ function embsScatter(embs) {
     actionLegend.append("text")
         .style("font-size","12px")
         .style("text-anchor","start")
-        .attr("transform", function(d,i) { return `translate(${30},${5})`;})
+        .attr("transform",`translate(${30},${5})`)
         .attr("fill","#1A1A1A")
         .text(function (d,i) { return colorOrd.domain()[i]; }); 
     
@@ -280,7 +304,7 @@ function embsScatter(embs) {
 
     var lg_x;
     var lg_y;
-    var defs=svg.append("defs");
+    var defs=svgLegend.append("defs");
     var linearGradient;
 
     for(var i=0;i<2;i++) {
@@ -479,7 +503,6 @@ function embsScatter(embs) {
         .on("mouseleave", mouseMoveOut)            
         .on("click",mouseClickHandler);
 
-    // d3.select("#Scatter").on("click", resetClick);
     d3.select("#ActionLegend").on("click", resetClick);
 
 
@@ -561,17 +584,18 @@ function CenterPointer(embs,points) {
 
     return idxs[dist.indexOf(Math.min(...dist))];
 }
+
 function showSelectedImage(embs,idx) {
     const margin={top:50,bottom:30,left:20,right:20};
     var frame=embs[idx];
 
-    var width=d3.select(".sideview")
+    var width=d3.select(".rightview")
         .style("width")
         .slice(0,-2);
-    var height=width;
+    // var height=width;
 
     var maxWidth=d3.min([width-margin.left-margin.right,800]);
-    var maxHeight=d3.min([height*0.6,500]);
+    var maxHeight=d3.min([width*0.6,400]);
 
     var imgWidth=maxWidth*0.65;
     var imgHeight=maxHeight*0.6+5;
@@ -591,9 +615,6 @@ function showSelectedImage(embs,idx) {
     myCanvas.height=patchHeight*2+5;
     myCanvas.style.top=margin.top+"px";
     myCanvas.style.left=margin.left+imgWidth+"px";
-
-    var ratioW=patchWidth/450;
-    var ratioH=patchHeight/500;
 
     var ctx=myCanvas.getContext("2d");
 
@@ -618,9 +639,255 @@ function showSelectedImage(embs,idx) {
     }
 }
 
-function showData() {
-    let embs=store.embs_dict;
 
-    embsScatter(embs);
+function heatMap(container,embs, order) {
+
+    var {margin,rectsWidth,rectsHeight}=container;
+
+    // var plotLeft=margin.left+(margin.left+margin.right+rectsWidth)*order;
+
+    var svg=d3.select("#heatmap"+String(order))
+        .style("width",rectsWidth+margin.left+margin.right)
+        .style("height",rectsHeight+margin.top+margin.bottom)
+    
+    //////////////////////////////////////////////////////
+    //////////////// Scatter Plot Axis ///////////////////
+    //////////////////////////////////////////////////////
+    var xLim=d3.extent(embs.map(function(d,i) {
+        if (d.domain==featureDomains[order]) {
+            return eval(d.x)*1.0;
+        }
+    }))
+
+    var yLim=d3.extent(embs.map(function(d,i) {
+        if (d.domain==featureDomains[order]) {
+            return eval(d.y)*1.0;
+        }
+    }))
+
+    var xScale=d3.scaleLinear()
+        .range([0,rectsWidth])
+        .domain(xLim)
+    var yScale=d3.scaleLinear()
+        .range([rectsHeight,0])
+        .domain(yLim)
+
+    var axisX=d3.axisBottom(xScale).tickSize(0);
+    var axisY=d3.axisLeft(yScale).tickSize(0);
+
+    svg.append("defs")
+        .append("marker")
+        .attr("id", "arrowhead-right")
+        .attr("refX", 5)
+        .attr("refY", 5)
+        .attr("markerWidth", 5)
+        .attr("markerHeight", 10)
+        .append("path")
+        .attr("d", "M 0 0 L 5 5 L 0 10")
+        .attr("stroke", "black")
+        .attr("stroke-width", 1)
+        .attr("fill", "none");
+
+    svg.append("defs")
+        .append("marker")
+        .attr("id", "arrowhead-top")
+        .attr("refX", 5)
+        .attr("refY", 0)
+        .attr("markerWidth", 10)
+        .attr("markerHeight", 5)
+        .append("path")
+        .attr("d", "M 0 5 L 5 0 L 10 5")
+        .attr("stroke", "black")
+        .attr("stroke-width", 1)
+        .attr("fill", "none");
+
+    svg.append("g")
+        .attr("id","axisX")
+        .style("font","12px")
+        .style("transform",`translate(${margin.left}px,${margin.top+rectsHeight}px)`)
+        .call(axisX)
+    svg.select("#axisX path.domain")
+        .attr("marker-end","url(#arrowhead-right)");
+
+    svg.append("text")
+        .style("font-size","14px")
+        .style("text-anchor","start")
+        .attr("x",margin.left+rectsWidth*.5)
+        .attr("y",margin.top+rectsHeight+20)
+        .attr("fill","#1A1A1A")
+        .text("x");  
+
+    svg.append("g")
+        .attr("id","axisY")
+        .style("font","12px")
+        .style("transform",`translate(${margin.left}px,${margin.top}px)`)
+        .call(axisY)
+    svg.select("#axisY path.domain")
+        .attr("marker-end","url(#arrowhead-top)");
+    
+    svg.append("text")
+        .style("font-size","14px")
+        .style("text-anchor","start")
+        .attr("x",0)
+        .attr("y",margin.top+rectsHeight*0.5)
+        .attr("fill","#1A1A1A")
+        .text("y"); 
+    
+    var title=featureDomains[order]
+    
+    svg.append("text")
+        .style("font-size","14px")
+        .style("text-anchor","start")
+        .attr("x",margin.left+rectsWidth*0.5)
+        .attr("y",20)
+        .attr("fill","#1A1A1A")
+        .text(title); 
+    
+    //////////////////////////////////////////////////////
+    ///////////////// Plot rectangles ////////////////////
+    //////////////////////////////////////////////////////
+
+    var inputForRectBinning = []
+    embs.forEach(function(d) {
+        if (d.domain==featureDomains[order]) {
+            inputForRectBinning.push([+d.x, +d.y]);
+        }
+    })
+
+    const lg_w=20;
+    const lg_h=150;
+
+    // Compute the rectbin
+    var output = document.getElementById("binsizeOutput"+String(order));
+    function update(binsize) {
+        output.innerHTML = binsize;
+
+        var rectbin = d3.rectbin()
+            .dx(binsize)
+            .dy(binsize);
+        var rectbinData=rectbin(inputForRectBinning);
+
+        var heightInPx = yScale(yLim[1]-binsize);
+        var widthInPx = xScale(xLim[0]+binsize);
+
+        // Prepare a color palette
+        var histogramData=rectbinData.map(a=> eval(a.length));
+        var colorLim=d3.extent(histogramData);
+
+        var colorDensity = d3.scaleSequential(d3.interpolateBuPu)
+            .domain(colorLim) // Number of points in the bin?
+            // .range(["transparent", "#69a3b2"]);
+            // .range(["#FFFFDD","#1F2D86"]);
+        // var colorAttr=d3.interpolatePlasma();
+            
+        var rects=svg
+            .selectAll("rect")
+            .data(rectbinData)
+            
+        rects.enter()
+            .append("g")
+            .append("rect")
+            .merge(rects)
+            .transition()
+            .duration(1000)
+            .attr("x", function(d) { return margin.left+xScale(d.x) })
+            .attr("y", function(d) { return margin.top+yScale(d.y) - heightInPx })
+            .attr("width", widthInPx)
+            .attr("height", heightInPx)
+            .attr("fill", function(d) { return colorDensity(d.length); })
+            .attr("stroke", "#A8A8A8")
+            .attr("stroke-width", "0.1");
+
+        rects
+            .exit()
+            .remove();
+    }
+
+    update(1);
+
+    d3.select("#binsizeSlider"+String(order)).on("input",function() {
+        update(+this.value/10);
+    });
+}
+
+function multiHeatMap(embs) {
+    var width=d3.select(".longview")
+        .style("width")
+        .slice(0,-2);
+    const margin={top:70,bottom:30,left:20,right:100};
+
+    var maxWidth=width*0.9;
+    var maxHeight=d3.min([width*0.5,300]);
+
+    var container={
+        margin:margin,
+        rectsWidth:maxWidth*0.25,
+        rectsHeight:maxHeight
+    }
+    
+    heatMap(container,embs,0);
+    heatMap(container,embs,1);
+    heatMap(container,embs,2);
+
+    //////////////////////////////////////////////////////
+    /////////////////// Action Legend ////////////////////
+    //////////////////////////////////////////////////////
+    // var color = d3.scaleSequential(d3.interpolateBuPu)
+    //     .domain([0,100]) // Number of points in the bin?
+
+    // var legendWidth=d3.select(".legendview")
+    //     .style("width")
+    //     .slice(0,-2);
+    // var svgLegend=d3.select("#histLegend")
+    //     .style("width",legendWidth)
+    //     .style("height",maxHeight+margin.top+margin.bottom)
+
+    // var defs=svgLegend.append("defs");
+
+    // var legendWrapper=svgLegend.append("g").attr("class", "legendWrapper")
+    //     .style("transform",`translate(${margin.left}px,${margin.top*.5}px)`);
+    
+    // var linearGradient=defs.append("linearGradient")
+    //     .attr("id","linear-gradient");
+    // linearGradient
+    //     .attr("x1","100%")
+    //     .attr("y1","100%")
+    //     .attr("x2","100%")
+    //     .attr("y2","0%");
+    // linearGradient.selectAll("stop")
+    //     .data([
+    //         {offset:"0%",color:color(0)},
+    //         {offset:"100%",color:color(100)},
+    //     ]).enter()
+    //     .append("stop")
+    //     .attr("offset", function(d) { return d.offset; })
+    //     .attr("stop-color", function(d) { return d.color; });
+    
+    // legendWrapper
+    //     .append("rect")
+    //     .attr("x",0)
+    //     .attr("y",margin.top)
+    //     .attr("width",20)
+    //     .attr("height",200)
+    //     .attr("fill","url(#linear-gradient)")
+    //     // .attr("fill","blue")
+    //     .style("opacity",0.7);
+    
+    // let colorBarDomain=domains[i].map(d=>d.toFixed(0));
+    // let colorBardRange=[lg_h,lg_h*0.75,lg_h*0.5,lg_h*0.25,0];
+    
+    // legendWrapper.append("g")
+    //     .attr("transform",`translate(${lg_x+lg_w},${lg_y})`)
+    //     .call(d3.axisRight(d3.scaleOrdinal().domain(colorBarDomain).range(colorBardRange)));
+
+
+}
+
+function showData() {
+    let scatter_embs=store.scatter_dict;
+    let swing_embs=store.swing_dict;
+
+    embsScatter(scatter_embs);
+    multiHeatMap(swing_embs);
 }
 loadData().then(showData);
