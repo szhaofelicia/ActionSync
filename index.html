@@ -13,7 +13,7 @@
         }
         html,body{
             width:auto;
-            height:100%;
+            height:auto;
         }
         
         svg{
@@ -21,18 +21,26 @@
             background-color: white;
         }
 
-        .mainview{
+        .leftview{
             float:left;
             width:40%
         }
-        .sideview{
+        .rightview{
             float:left;
-            width:30%;
-            height: 100%;
+            width:40%;
         }
         .legendview{
             float:left;
-            width:15%;
+            width:20%;
+        } 
+
+        .longview{
+            float:left;
+            width:75%;
+        } 
+        .shortview{
+            float:left;
+            width:20%;
         } 
 
         .tooltip {
@@ -75,63 +83,55 @@
 </script>
 <script src="./d3-lasso.min.js"> </script>
 <script src="./tsne_frame.js"> </script>
+<script src="https://cdn.rawgit.com/fabid/d3-rectbin/master/rectbin.js"></script>
 
     <!-- <link rel="preconnect" href="https://fonts.gstatic.com">
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400;1,600;1,700&display=swap" rel="stylesheet">  -->
 
 <body>
     <h1> Baseball Game Video Frame Embeddings</h1>
-    <div class="mainview", id="tsne">
+    <div class="leftview", id="tsne">
         <h2 style="color: #3B3B3B;">TSNE </h2>  
         <svg id="scatter" ></svg>
     </div>
     <div class="legendview", id="legend">
         <div class="slidecontainer">
-            <input type="range" min="1" max="100" value="50" id="opacitySlider" >
-            Opacity: <span id="outputVar"></span>
+            <input type="range" min="1" max="100" value="100" id="opacitySlider" >
+            Opacity: <span id="opacityOutput"></span>
         </div>
         <svg id="actionLegend" ></svg>
     </div>
-    <div class="sideview">
+    <div class="rightview">
         <h2 style="color: #3B3B3B;">Image </h2>  
-        <svg id="Image" >
-            <image id="theImage">
-        </svg>
+        <div class="img-container">
+                <img id="theImage">
+                <canvas id="theCanvas">
+                    Your browser doesn't include support for the canvas element.
+                </canvas>
+        </div>
+
     </div>
-    <div class="mainview">
-        <h2 style="color: #3B3B3B;">density </h2>  
-        <svg id="Image" ></svg>
+    <div class="longview">
+        <h2 style="color: #3B3B3B;">PCA Dimensions </h2> 
+        <svg id="heatmap0" ></svg>
+        <svg id="heatmap1" ></svg>
+        <svg id="heatmap2" ></svg>
     </div>
+    <div class="legendview">
+        <div>
+            <input type="range" min="1" max="10" value="10" id="binsizeSlider0" >
+            Binsize: <span id="binsizeOutput0"></span>
+            <input type="range" min="1" max="10" value="10" id="binsizeSlider1" >
+            Binsize: <span id="binsizeOutput1"></span>
+            <input type="range" min="1" max="10" value="10" id="binsizeSlider2" >
+            Binsize: <span id="binsizeOutput2"></span>
+        </div> 
+        <svg id="histLegend" ></svg>
+    </div>
+    <!-- <div class="shortview">
+        <h2 style="color: #3B3B3B;">Histogram </h2>  
+
+        <svg id="histogram" ></svg>
+    </div> -->
 </body>
-
-
 </html>
-
-<!-- 
-    color template: 
-        123f77 0f86b6 37cae5 f5db73
-        2d3505 828227 aa3b00 d6873e
-
-    Distribution: all train set:
-    Interactive tool: selection-- around 5000 data poionts: around 100 videos (30 fps)
-
-        /* .leftview{
-            position:relative;
-            display:flex;
-            flex-direction:column;
-            width: 50%;
-            height: 100%;
-            left: 0%;
-            top: 0%;
-        }
-        .rightview{
-            position:relative;
-            display:flex;
-            flex-direction:column;
-            width: 40%;
-            height: 100%;
-            left: 60%;
-            top: -100%;
-        } */
-
- -->
