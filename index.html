@@ -27,11 +27,11 @@
         }
         .rightview{
             float:left;
-            width:40%;
+            width:50%;
         }
         .legendview{
             float:left;
-            width:20%;
+            width:10%;
         } 
 
         .longview{
@@ -102,16 +102,24 @@
         <svg id="actionLegend" ></svg>
     </div>
     <div class="rightview">
-        <h2 style="color: #3B3B3B;">Image </h2>  
-        <div class="img-container">
-                <img id="theImage">
-                <canvas id="theCanvas">
-                    Your browser doesn't include support for the canvas element.
-                </canvas>
+        <h2 style="color: #3B3B3B;">Video Synchronization</h2> 
+        <h3 style="color: #3B3B3B; float:left; width:50%">
+        Reference</h2> 
+        <h3 style="color: #3B3B3B; float:left; width:50%">
+        Query</h2> 
+        <div class="img-container" style="position:relative;top:0">
+            <canvas id="reference"> 
+                Your browser doesn't include support for the canvas element.
+            </canvas>
+            <canvas id="query">
+                Your browser doesn't include support for the canvas element.
+            </canvas>
+            <img id="referenceImage">
+            <img id="queryImage">
         </div>
-
     </div>
-    <div class="longview">
+<!--
+   <div class="longview">
         <h2 style="color: #3B3B3B;">PCA Dimensions </h2> 
         <svg id="heatmap0" ></svg>
         <svg id="heatmap1" ></svg>
@@ -126,12 +134,13 @@
             <input type="range" min="1" max="10" value="10" id="binsizeSlider2" >
             Binsize: <span id="binsizeOutput2"></span>
         </div> 
-        <svg id="histLegend" ></svg>
+        <svg id="histLegend" ></svg> 
     </div>
-    <!-- <div class="shortview">
+    <div class="shortview">
         <h2 style="color: #3B3B3B;">Histogram </h2>  
 
         <svg id="histogram" ></svg>
-    </div> -->
+    </div>
+     -->
 </body>
 </html>

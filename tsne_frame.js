@@ -4,11 +4,13 @@ let store={
 const action="bbgame_swing_ball";
 const split="train";
 const date="0815";
-// const json_path=`data/${action}_${split}_${date}_5000_embs.csv`;
+// const scatter_path=`data/${action}_${split}_${date}_5000_embs_patch.csv`;
 const scatter_path=`data/${action}_${split}_${date}_embs_flow_48video_patch.csv`;
 const hist_path=`data/bbgame_swing_multiple_${split}_${date}_pca_dtw.csv`;
 const image_url="https://baseballgameactivities.s3.us-east-2.amazonaws.com/";
+// const extention_id="chrome-extension://ihckakjjeajfccjdbhgeedageimiomio/";
 const activities=["swing","ball"];
+const reference=["JUHQMF1NKBUE", "1OXKJPPE26HJ"];
 const featureDomains=["image","left","right"];
 function loadData() {
     return Promise.all([
@@ -223,6 +225,11 @@ function embsScatter(embs) {
     ///////////////////////////////////////////////////////////////////////////
     ////////////////// Hover & Click functions for legend /////////////////////
     ///////////////////////////////////////////////////////////////////////////
+    
+    // body.append("path")
+    //     .attr("class","reference-point")
+    //     .style("display","none")
+    //     .style("fill", "none")
 
     //Decrease opacity of non selected circles when hovering in the legend	
     function selectLegend(opacity) {
@@ -247,17 +254,28 @@ function embsScatter(embs) {
             .on("mouseout", null);
             
         //Chosen legend item
-        var chosen = i;
+        // var chosen = i;
                 
-        //Only show the circles of the chosen sector
+        //Only show the markers of the chosen sector
         body.selectAll(".point")
-            .style("opacity", pointOpacity)
+            .style("opacity", function(d) {
+                if (d.names.slice(2,-1) == reference[i]) return 1;
+                else return 0.3;
+            })
             .style("visibility", function(d) {
-                if (d.seq_labels != chosen) return "hidden";
+                if (d.seq_labels != i) return "hidden";
                 else return "visible";
-            });
+            })
+            .style("stroke", "blue")
+            .style("stroke-opacity", 1)
+            .style("stroke-width", function(d) {
+                if (d.names.slice(2,-1) == reference[i]) return "1px";
+                else return "0px";
+            })
+                
                 
     }//sectorClick
+
 
     var actionLegend=legendWrapper.selectAll(".legendMarker")  	
         .data(colorOrd.range())                              
@@ -483,13 +501,22 @@ function embsScatter(embs) {
             .style("opacity", pointOpacity)
             .style("visibility", "visible");
         
-        var img = document.getElementById("theImage");
-        if (img) {
-            img.style.visibility="hidden";
+        var queryImg = document.getElementById("queryImage");
+        if (queryImg) {
+            queryImg.style.visibility="hidden";
         }
-        var myCanvas=document.getElementById("theCanvas")
-        var ctx=myCanvas.getContext("2d");
-        ctx.clearRect(0, 0, myCanvas.width, myCanvas.height);
+        var referenceImg = document.getElementById("referenceImage");
+        if (referenceImg) {
+            referenceImg.style.visibility="hidden";
+        }
+
+        var myQuery=document.getElementById("query")
+        var ctxQ=myQuery.getContext("2d");
+        ctxQ.clearRect(0, 0, myQuery.width, myQuery.height);
+
+        var myReference=document.getElementById("reference")
+        var ctxR=myReference.getContext("2d");
+        ctxR.clearRect(0, 0, myReference.width, myReference.height);
 
     }
 
@@ -592,31 +619,38 @@ function showSelectedImage(embs,idx) {
     var width=d3.select(".rightview")
         .style("width")
         .slice(0,-2);
-    // var height=width;
 
     var maxWidth=d3.min([width-margin.left-margin.right,800]);
     var maxHeight=d3.min([width*0.6,400]);
 
-    var imgWidth=maxWidth*0.65;
-    var imgHeight=maxHeight*0.6+5;
+    var imgWidth=maxWidth*0.5;
+    var imgHeight=maxHeight*0.4+5;
 
-    var patchWidth=maxWidth*0.25;
-    var patchHeight=maxHeight*0.3;
+    var patchWidth=(imgWidth-5)*0.5;
+    var patchHeight=imgHeight*0.7;
 
-    var myImg=document.getElementById("theImage");
-    myImg.width=imgWidth;
-    myImg.height=imgHeight;
-    myImg.style.top=margin.top+"px";
-    myImg.style.left=margin.left+"px";
+    var referenceImg=document.getElementById("referenceImage");
+    referenceImg.width=0;
+    referenceImg.height=0;
+
+    var queryImg=document.getElementById("queryImage");
+    queryImg.width=0;
+    queryImg.height=0;
+
     // myImg.style.border="2px solid #021a40";
 
-    var myCanvas=document.getElementById("theCanvas");
-    myCanvas.width=patchWidth;
-    myCanvas.height=patchHeight*2+5;
-    myCanvas.style.top=margin.top+"px";
-    myCanvas.style.left=margin.left+imgWidth+"px";
+    var myQuery=document.getElementById("query");
+    myQuery.width=imgWidth;
+    myQuery.height=imgHeight+patchHeight+3;
+    
 
-    var ctx=myCanvas.getContext("2d");
+    var myReference=document.getElementById("reference");
+    myReference.width=imgWidth;
+    myReference.height=imgHeight+patchHeight+3;
+
+    var ctxQ=myQuery.getContext("2d");
+    var ctxR=myReference.getContext("2d");
+
 
     function FormatNumberLength(num, length) {
         var r = "" + num;
@@ -627,14 +661,25 @@ function showSelectedImage(embs,idx) {
     }
 
     if (frame) {
-        var frame_url=image_url+activities[frame.seq_labels]+"/"+frame.names.slice(2,-1)+FormatNumberLength(frame.steps,4)+".jpg";
-        myImg.src=frame_url;
-        myImg.style.visibility="visible";
+        var query_url=image_url+activities[frame.seq_labels]+"/"+frame.names.slice(2,-1)+FormatNumberLength(frame.steps,4)+".jpg";
+        var reference_url=image_url+activities[frame.seq_labels]+"/"+reference[frame.seq_labels]+FormatNumberLength(frame.dtw,4)+".jpg";
+
+        // var query_url=extention_id+activities[frame.seq_labels]+"_videos/rm_noise/frames/"+frame.names.slice(2,-1)+FormatNumberLength(frame.steps,4)+".jpg";
+        // var reference_url=extention_id+activities[frame.seq_labels]+"_videos/rm_noise/frames/"+reference[frame.seq_labels]+FormatNumberLength(frame.dtw,4)+".jpg";
+
+        queryImg.src=query_url;
+        referenceImg.src=reference_url;
+
         var posi={ll:eval(frame.left)[0],lt:eval(frame.left)[1],rl:eval(frame.right)[0],rt:eval(frame.right)[1]}
          
-        myImg.onload= function() {
-            ctx.drawImage(myImg,posi.ll,posi.lt,500,450,0,0,patchWidth,patchHeight);
-            ctx.drawImage(myImg,posi.rl,posi.rt,500,450,0,patchHeight+5,patchWidth,patchHeight);
+        queryImg.onload= function() {
+            ctxQ.drawImage(queryImg,0,0,1280,720,0,0,imgWidth,imgHeight);//Whole image
+            ctxQ.drawImage(queryImg,posi.ll,posi.lt,500,450,0,imgHeight+3,patchWidth,patchHeight);//Left patch
+            ctxQ.drawImage(queryImg,posi.rl,posi.rt,500,450,patchWidth+5,imgHeight+3,patchWidth,patchHeight);//Right patch
+        }
+
+        referenceImg.onload= function() {
+            ctxR.drawImage(referenceImg,0,0,1280,720,0,0,imgWidth,imgHeight+patchHeight);//Whole image
         }
     }
 }
@@ -888,6 +933,6 @@ function showData() {
     let swing_embs=store.swing_dict;
 
     embsScatter(scatter_embs);
-    multiHeatMap(swing_embs);
+    // multiHeatMap(swing_embs);
 }
 loadData().then(showData);
