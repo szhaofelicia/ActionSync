@@ -125,21 +125,27 @@ with open(csv_path%(action,split,date),'w') as csvfile:
 
 
 
-################### patch ######################
+###################  load patch and save it to csv ######################
 
 patch_time='11-10-20-48'
-patch_dir="/media/felicia/Data/object_detection/patch/swing/patch_dict_%s.npy"%patch_time
 
-patch_dict= np.load(patch_dir,allow_pickle=True)
-patch_dict=patch_dict.item()
+patch_dir_swing="/media/felicia/Data/object_detection/patch/swing/patch_dict_%s.npy"%patch_time
+patch_dir_swing= np.load(patch_dir_swing,allow_pickle=True)
+patch_dir_swing=patch_dir_swing.item()
 
+patch_dir_ball="/media/felicia/Data/object_detection/patch/ball/patch_dict_12-22-17-59.npy"
+patch_dir_ball= np.load(patch_dir_ball,allow_pickle=True)
+patch_dir_ball=patch_dir_ball.item()
+
+patch_dict=patch_dir_swing.update(patch_dir_ball)
 
 action='bbgame_swing_ball'
 split='train'
 date='0815'
-csv_path='data/%s_%s_%s_embs_flow_48videos.csv'%(action,split,date)
+# csv_path='data/%s_%s_%s_embs_flow_48videos.csv'%(action,split,date)
+csv_path='data/%s_%s_%s_5000_embs.csv'%(action,split,date)
 
-new_path='data/%s_%s_%s_embs_flow_48video_patch.csv'%(action,split,date)
+new_path='data/%s_%s_%s_5000_embs_patch.csv'%(action,split,date)
 
 
 embs_df=pd.read_csv(csv_path,header=0)
@@ -153,10 +159,10 @@ for i in range(nembs):
     if embs_data[i][-3]==0:
         step=int(embs_data[i][5]//3)
         key='%s_%s'%(embs_data[i][3][2:-1],"{:02d}".format(step))
-        l,r,t,b=list(map(int, patch_dict[key]['left']))
+        l,r,t,b=list(map(int, patch_dir_swing[key]['left']))
         left.append([l,t])
 
-        l,r,t,b=list(map(int, patch_dict[key]['right']))
+        l,r,t,b=list(map(int, patch_dir_swing[key]['right']))
         right.append([l,t])
     else:
         left.append([0,160])

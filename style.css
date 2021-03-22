@@ -1,0 +1,97 @@
+body{
+    font-family: 'Open Sans', sans-serif; /* Helvetica, Arial, sans-serif */
+    font-weight: 400;
+    font-size: 12px;
+    background-color: white;
+    text-align:center;
+}
+html,body{
+    width:auto;
+    height:auto;
+}
+
+svg{
+    border-style:none;
+    background-color: white;
+}
+
+/* .leftview{
+    display: inline-block;
+    float:left; 
+    width:80%;
+    vertical-align: top;
+} */
+/* .rightview{
+    display: inline-block;
+    float:left;
+    width:50%;
+    vertical-align: top;
+} */
+/* .legendview{
+    display: inline-block;
+    float:left;
+    width:20%;
+    vertical-align: top;
+}  */
+
+
+.splitview{
+    display: inline-block;
+    width:50%;
+    vertical-align: top;
+}
+
+.contentview{
+    display: inline-block;
+    width:80%;
+    vertical-align: top;
+}
+.legendview{
+    display: inline-block;
+    width:20%;
+    vertical-align: top;
+}
+
+
+.longview{
+    float:left;
+    width:75%;
+} 
+.shortview{
+    float:left;
+    width:20%;
+} 
+
+.tooltip {
+    position: absolute;
+    font-size: 12px;
+    width:  auto;
+    height: auto;
+    pointer-events: none;
+    background-color: white;
+}
+
+.lasso path {
+    stroke: rgb(80,80,80);
+    stroke-width:2px;
+}
+
+.lasso .drawn {
+    fill-opacity:.05 ;
+}
+
+.lasso .loop_close {
+    fill:none;
+    stroke-dasharray: 4,4;
+}
+
+.lasso .origin {
+    fill:#3399FF;
+    fill-opacity:.5;
+}
+
+
+block {
+    width:50%;
+    border: double solid grey;
+}
