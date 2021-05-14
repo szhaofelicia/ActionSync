@@ -2,78 +2,14 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
     <title> Baseball Game Video Embeddings</title>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300;0,400;1,300;1,400&display=swap');
-        body{
-            font-family: 'Open Sans', sans-serif; /* Helvetica, Arial, sans-serif */
-            font-weight: 400;
-            font-size: 12px;
-            background-color: white;
-            text-align:center;
-        }
-        html,body{
-            width:auto;
-            height:auto;
-        }
-        
-        svg{
-            border-style:none;
-            background-color: white;
-        }
 
-        .leftview{
-            float:left;
-            width:40%
-        }
-        .rightview{
-            float:left;
-            width:40%;
-        }
-        .legendview{
-            float:left;
-            width:20%;
-        } 
+    <!-- <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous"> -->
+    
+    <link rel="stylesheet" href="node_modules/bootstrap/dist/css/bootstrap.min.css" >
+    <link rel="stylesheet" href="style.css">
 
-        .longview{
-            float:left;
-            width:75%;
-        } 
-        .shortview{
-            float:left;
-            width:20%;
-        } 
-
-        .tooltip {
-            position: absolute;
-            font-size: 12px;
-            width:  auto;
-            height: auto;
-            pointer-events: none;
-            background-color: white;
-        }
-
-        .lasso path {
-            stroke: rgb(80,80,80);
-            stroke-width:2px;
-        }
-
-        .lasso .drawn {
-            fill-opacity:.05 ;
-        }
-
-        .lasso .loop_close {
-            fill:none;
-            stroke-dasharray: 4,4;
-        }
-
-        .lasso .origin {
-            fill:#3399FF;
-            fill-opacity:.5;
-        }
-
-
-    </style>
 </head>
+
 
 <script 
     type='text/javascript' 
@@ -85,53 +21,88 @@
 <script src="./tsne_frame.js"> </script>
 <script src="https://cdn.rawgit.com/fabid/d3-rectbin/master/rectbin.js"></script>
 
-    <!-- <link rel="preconnect" href="https://fonts.gstatic.com">
-    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400;1,600;1,700&display=swap" rel="stylesheet">  -->
+<link href="//cdn.muicss.com/mui-0.10.3/css/mui.min.css" rel="stylesheet" type="text/css" />
+<script src="//cdn.muicss.com/mui-0.10.3/js/mui.min.js"></script>
+
+
 
 <body>
-    <h1> Baseball Game Video Frame Embeddings</h1>
-    <div class="leftview", id="tsne">
-        <h2 style="color: #3B3B3B;">TSNE </h2>  
-        <svg id="scatter" ></svg>
-    </div>
-    <div class="legendview", id="legend">
-        <div class="slidecontainer">
-            <input type="range" min="1" max="100" value="100" id="opacitySlider" >
-            Opacity: <span id="opacityOutput"></span>
-        </div>
-        <svg id="actionLegend" ></svg>
-    </div>
-    <div class="rightview">
-        <h2 style="color: #3B3B3B;">Image </h2>  
-        <div class="img-container">
-                <img id="theImage">
-                <canvas id="theCanvas">
+<h1 style="margin-top:10px;margin-bottom: 0px;"> ActionSync</h1>
+<div class="mui-container-fluid">
+    <div class="mui--divider-bottom", style="display:block;overflow: auto;">
+        <div id="embedding_space", class="border-right", 
+            style="display: inline-block;width: 60%;vertical-align: top;"
+        >
+            <div class="contentview" id="tsne">
+            <h2 style="color: #3B3B3B;margin-top:5px; margin-bottom: 0px;">Embedding Space</h2>  
+            <svg id="scatter" >
+            </svg></div><div class="legendview", id="legend">
+                <!-- <div class="slidecontainer">
+                    <input type="range" min="1" max="100" value="100" id="opacitySlider" >
+                    Opacity: <span id="opacityOutput"></span>
+                </div> -->
+                <div class="mui-dropdown">
+                    <button class="mui-btn mui-btn--flat mui-btn--primary" data-mui-toggle="dropdown"
+                    id="swingButton" style="width: 100px; font-size: 10px"
+                    >Swing<span class="mui-caret"></span></button>
+                    <ul class="mui-dropdown__menu" id="swing-dropdown" style="min-width: 100px;">
+                      <li class="swing-option"><a href="#">Candidate 1</a></li>
+                      <li class="swing-option"><a href="#">Candidate 2</a></li>
+                      <li class="swing-option"><a href="#">Candidate 3</a></li>
+                    </ul>
+                </div>
+                <div class="mui-dropdown" >
+                    <button class="mui-btn mui-btn--primary" data-mui-toggle="dropdown"
+                    id="ballButton" style="width: 100px; font-size: 10px;"
+                    >Ball<span class="mui-caret"></span></button>
+                    <ul class="mui-dropdown__menu" id="ball-dropdown" style="min-width: 100px;" >
+                      <li class="ball-option"><a href="#">Candidate 1</a></li>
+                      <li class="ball-option"><a href="#">Candidate 2</a></li>
+                      <li class="ball-option"><a href="#">Candidate 3</a></li>
+                    </ul>
+                </div>
+                <svg id="actionLegend" ></svg>
+            </div>
+        </div><div id="frame", class="splitview">
+            <h2 style="color: #3B3B3B;margin-top:5px; margin-bottom: 0px;">Video Alignment</h2> 
+            <h3 style="color: #3B3B3B; float:left; width:50%;margin-top:5px;margin-bottom: 5px;">Reference</h3> 
+            <h3 style="color: #3B3B3B; float:left; width:50%;margin-top:5px;margin-bottom: 5px;">Query</h3> 
+            <div class="img-container" style="position:relative;top:0">
+                <canvas id="reference"> 
                     Your browser doesn't include support for the canvas element.
                 </canvas>
+                <canvas id="query">
+                    Your browser doesn't include support for the canvas element.
+                </canvas>
+                <img id="referenceImage">
+                <img id="queryImage">
+            </div>
         </div>
+    </div>
 
-    </div>
-    <div class="longview">
-        <h2 style="color: #3B3B3B;">PCA Dimensions </h2> 
-        <svg id="heatmap0" ></svg>
-        <svg id="heatmap1" ></svg>
-        <svg id="heatmap2" ></svg>
-    </div>
-    <div class="legendview">
-        <div>
-            <input type="range" min="1" max="10" value="10" id="binsizeSlider0" >
-            Binsize: <span id="binsizeOutput0"></span>
-            <input type="range" min="1" max="10" value="10" id="binsizeSlider1" >
-            Binsize: <span id="binsizeOutput1"></span>
-            <input type="range" min="1" max="10" value="10" id="binsizeSlider2" >
-            Binsize: <span id="binsizeOutput2"></span>
-        </div> 
-        <svg id="histLegend" ></svg>
-    </div>
-    <!-- <div class="shortview">
-        <h2 style="color: #3B3B3B;">Histogram </h2>  
+</div>
 
-        <svg id="histogram" ></svg>
-    </div> -->
+<div class="mui-container-fluid">
+  <ul class="mui-tabs__bar" style="text-align:left;margin-bottom:0 auto;">
+    <li class="mui--is-active" ><a data-mui-toggle="tab" data-mui-controls="pane-default-1" style="font-size: 12px;">Swing Activity</a></li>
+    <li><a data-mui-toggle="tab" data-mui-controls="pane-default-2" style="font-size: 12px;">Ball Activity</a></li>
+  </ul>
+  <div class="mui-tabs__pane mui--is-active" id="pane-default-1" >
+    <div id="swingVideo",  style="text-align:left;">
+        <svg id="swingHeatmap" ></svg>
+        <svg id="swingVector" ></svg>
+        <svg id="swingEvent"></svg>
+       
+    </div> 
+  </div>
+  <div class="mui-tabs__pane" id="pane-default-2">
+    <div id="ballVideo",  style="text-align:left;">
+        <svg id="ballHeatmap" ></svg>
+        <svg id="ballVector" ></svg>
+        <svg id="ballEvent"></svg>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
