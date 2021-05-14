@@ -1,3 +1,7 @@
+@page {
+    size: auto;
+}
+
 body{
     font-family: 'Open Sans', sans-serif; /* Helvetica, Arial, sans-serif */
     font-weight: 400;
@@ -13,6 +17,11 @@ html,body{
 svg{
     border-style:none;
     background-color: white;
+}
+
+h1,h2 h3{
+    margin-bottom:0px;
+    padding:0px;
 }
 
 /* .leftview{
@@ -37,18 +46,18 @@ svg{
 
 .splitview{
     display: inline-block;
-    width:50%;
+    width:40%;
     vertical-align: top;
 }
 
 .contentview{
     display: inline-block;
-    width:80%;
+    width:83%;
     vertical-align: top;
 }
 .legendview{
     display: inline-block;
-    width:20%;
+    width:13%;
     vertical-align: top;
 }
 
@@ -91,7 +100,56 @@ svg{
 }
 
 
-block {
+
+/* block {
     width:50%;
     border: double solid grey;
+} */
+
+.swing-option {
+    width: 100px; 
+    font-size: 10px ;
+}
+
+.ball-option {
+    width: 100px; 
+    font-size: 10px ;
+}
+
+/* Parent Container */
+.content_img{
+    position: relative;
+    width: auto;
+    height: auto;
+    float: left;
+    margin-right: 10px;
+}
+   
+/* Child Text Container */
+.content_img div{
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    background: white;
+    color: black;
+    margin-bottom: 5px;
+    font-family: sans-serif;
+    font-size: 10px; 
+    opacity: 0;
+    visibility: hidden;
+    -webkit-transition: visibility 0s, opacity 0.5s linear; 
+    transition: visibility 0s, opacity 0.5s linear;
+}
+
+/* Hover on Parent Container */
+.content_img:hover{
+    cursor: pointer;
+   }
+   
+.content_img:hover div{
+    width: 70px;
+    border-radius: 2px;
+    padding: 5px 12px;
+    visibility: visible;
+    opacity: 0.7; 
 }
