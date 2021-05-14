@@ -13,6 +13,7 @@ const extention_id="chrome-extension://ihckakjjeajfccjdbhgeedageimiomio/";
 const activities=["swing","ball"];
 const reference=[["H2RJ33BPVBQ4", "D8VI1WQ5GFI0", "NM9MYF2F8620"],["4X7I2ILNXO0P","0N6NTL740URF","4SSFIK1YVJ2D"]]
 const reference_idx=[[1642,1907,2063],[2391,5692,3323]]
+
 const featureDomains=["image","left","right"];
 
 var ballRef="step";
