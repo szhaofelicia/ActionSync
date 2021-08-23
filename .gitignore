@@ -1,0 +1,13 @@
+node_modules/
+bower_components/
+archived/
+data/
+
+removed_cpdes.js
+heatmap_codes.js
+demo.txt
+memo.txt
+
+.eslintrc.json
+npm-debug.log
+package-lock.json

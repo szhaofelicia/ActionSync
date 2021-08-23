@@ -1,15 +1,17 @@
 let store={
     "selected_frame":null,
 }
-const action="bbgame_swing_ball";
-const split="train";
-const date="0815";
 
-const emb_path=`data/${action}_${split}_${date}_84videos_embs_patch.csv`;
-const vector_path=`data/${action}_${split}_${date}_84videos_vector.csv`;
+//const action="bbgame_swing_ball";
+//const split="train";
+//const date="0815";
+
+const emb_path=`data/84videos_image_embs.json`;
+const vector_path=`data/84videos_vector.csv`;
 const event_path=`data/video_events.json`;
 
-const extention_id="chrome-extension://ihckakjjeajfccjdbhgeedageimiomio/";
+//const extention_id="chrome-extension://ihckakjjeajfccjdbhgeedageimiomio/";
+
 const activities=["swing","ball"];
 const reference=[["H2RJ33BPVBQ4", "D8VI1WQ5GFI0", "NM9MYF2F8620"],["4X7I2ILNXO0P","0N6NTL740URF","4SSFIK1YVJ2D"]]
 const reference_idx=[[1642,1907,2063],[2391,5692,3323]]
@@ -21,11 +23,11 @@ var swingRef="step";
 
 function loadData() {
     return Promise.all([
-        d3.csv(emb_path),
+        d3.json(emb_path),
         d3.csv(vector_path),
-        d3.json(event_path)
+        d3.json(event_path),
     ]).then(datasets =>{
-        store.scatter_dict=datasets[0];
+        store.scatter_dict=datasets[0].data;
         store.video_vec=datasets[1];
         store.video_events=datasets[2];
         return store;
@@ -169,13 +171,6 @@ function embsScatter(embs) {
         })
         .attr("fill-opacity",
             pointOpacity 
-            // function(d) {
-            //     if(+d.label==0) {
-            //         return pointOpacity;
-            //     }else{
-            //         return 0.02;
-            //     }
-            // }
         )
         .attr("fill",function(d) {
             if(+d.label==0) {
@@ -205,13 +200,6 @@ function embsScatter(embs) {
         })
         .attr("fill-opacity",
             pointOpacity 
-            // function(d) {
-            //     if(+d.label==0) {
-            //         return pointOpacity;
-            //     }else{
-            //         return 0.02;
-            //     }
-            // }
         )
         .attr("fill",function(d) {
             if(+d.label==0) {
@@ -241,15 +229,7 @@ function embsScatter(embs) {
             return `translate(${margin.intervalX+imgWidth+xScaleRight(eval(d.tsneR)[0])},${margin.intervalY+maxHeight*0.45+yScaleRight(eval(d.tsneR)[1])})`;
         })
         .attr("fill-opacity",
-            pointOpacity 
-            // function(d) {
-            //     if(+d.label==0) {
-            //         return pointOpacity;
-            //     }else{
-            //         return 0.02;
-            //     }
-            // }
-        
+            pointOpacity         
         )
         .attr("fill",function(d) {
             if(+d.label==0) {
@@ -808,7 +788,7 @@ function embsScatter(embs) {
                     Frame: ${d.step}/${d.length-1} </br>
                     DTW label: ${dtw_order} </br>
                     `)
-                .style("opacity", 1)
+                .style("opacity", 0.7)
                 .style("left",margin.left+left+20+"px")
                 .style("top",margin.top+top-20+"px");
         }
@@ -1206,17 +1186,8 @@ function videoHeatmap(vectors,videoEvents,action="swing") {
                 `)
             .style("left", (x+30) + "px")
             .style("top", (y+maxHeight + "px"))
-            .style("opacity", 0.7)
+            .style("opacity", 0.7);
 
-
-        // tooltip
-        //     .html(`
-        //         Video X: ${videoSamples[action][+d.key.slice(-2)].vidx} (cluster: ${videoSamples[action][+d.key.slice(-2)].cluster}) </br>
-        //         Video Y: ${d.parent.vidx} (cluster: ${d.parent.cluster}) </br>
-        //         `)
-        //     .style("left", (x+30) + "px")
-        //     .style("top", (y+maxHeight + "px"))
-        //     .style("opacity", 0.7)
     }
     var mouseleave = function(d) {
         tooltip
@@ -1523,7 +1494,8 @@ function videoHeatmap(vectors,videoEvents,action="swing") {
     //////////////////// Scatter Plot ////////////////////
     //////////////////////////////////////////////////////
     
-    var colorCluster = d3.scaleOrdinal(d3.schemeSet3); //default: d3.schemeCategory10
+    var colorCluster = d3.scaleOrdinal(d3.schemeSet3)
+                        .domain(d3.range(8));
 
     var xScale=d3.scaleLinear()
         .range([0,scatterWidth])
@@ -1668,7 +1640,7 @@ function videoHeatmap(vectors,videoEvents,action="swing") {
     //////////////////////////////////////////////////////
 
     const timestamps=videoEvents;
-    const evenTypes={"swing":["start","pitcher","batter","end"],"ball":["start","pitcher","catcher","batter","end"]};
+    const eventTypes={"swing":["start","pitcher","batter","end"],"ball":["start","pitcher","catcher","batter","end"]};
     const allVideos=["videoX","videoY"];
     const videoLength={"swing":53,"ball":84};
 
@@ -1692,7 +1664,7 @@ function videoHeatmap(vectors,videoEvents,action="swing") {
     
     // Add Y axis
     var y = d3.scalePoint()
-            .domain(evenTypes[action])
+            .domain(eventTypes[action])
             .range([ 0,maxHeight*0.6]);
 
     // Add the lines
@@ -1785,31 +1757,28 @@ function videoHeatmap(vectors,videoEvents,action="swing") {
         }
 
         var lines=bodyEvent.selectAll(`.myLines-${row}`)
-            .data(timestamps[action],function(d){ return d; })
+                .data(timestamps[action],function(d){ return d; })
         
         lines.enter()
+            .append("g")
             .append("path")
             .attr("class",`myLines-${row}`)
-            .attr("d", function(d){  
-                if (+d.vidx==+idx) return line(d.events
-                    .sort(
-                    function(x,y){
-                        return d3.ascending(x.time,y.time);
-                    })
-                    );})
             .merge(lines)
+            .attr("d", function(d){  
+                if (+d.vidx==+idx) 
+                    return line(
+                        d.events.sort(function(x,y){return d3.ascending(x.time,y.time);})
+                    );})
             .transition()
             .duration(1000)
             .attr("stroke", function(d){  
                 return lineColor(allVideos[row]) })
             .style("stroke-width", 4)
-            .style("fill", "none")
+            .style("fill", "none");
         
         lines
             .exit()
-            .remove()
-
-
+            .remove();
 
         var points=bodyEvent.selectAll(`.myPoints-${row}`)
                 .data(vd.events,function(d){ return d; })
@@ -1886,8 +1855,8 @@ function showSelectedImage(idx,image=true) {
     }else{
         var video=idx[0];
         var time=idx[1];
-        console.log(video);
-        console.log(time);
+//        console.log(video);
+//        console.log(time);
         var frame=embs.filter(d=> d.video==video && +d.step==+time);
         if (frame){
             frame=frame[0];
@@ -1951,11 +1920,15 @@ function showSelectedImage(idx,image=true) {
     }
 
     if (frame) {        
-        var query_url=extention_id+activities[+frame.label]+"_videos/rm_noise/frames/"+frame.video+FormatNumberLength(frame.step,4)+".jpg";
-        var reference_url=extention_id+activities[+frame.label]+"_videos/rm_noise/frames/"+ref_frame.video+FormatNumberLength(ref_frame.step,4)+".jpg";
+//        var query_url=extention_id+activities[+frame.label]+"_videos/rm_noise/frames/"+frame.video+FormatNumberLength(frame.step,4)+".jpg";
+//        var reference_url=extention_id+activities[+frame.label]+"_videos/rm_noise/frames/"+ref_frame.video+FormatNumberLength(ref_frame.step,4)+".jpg";
 
-        // var query_url=image_url+activities[frame.seq_labels]+"/"+frame.names.slice(2,-1)+FormatNumberLength(frame.steps,4)+".jpg";
-        // var reference_url=image_url+activities[frame.seq_labels]+"/"+frame.names.slice(2,-1)+FormatNumberLength(frame.steps,4)+".jpg";
+//        var query_url=image_url+activities[frame.seq_labels]+"/"+frame.names.slice(2,-1)+FormatNumberLength(frame.steps,4)+".jpg";
+//        var reference_url=image_url+activities[frame.seq_labels]+"/"+frame.names.slice(2,-1)+FormatNumberLength(frame.steps,4)+".jpg";
+
+
+        var query_url = `https://drive.google.com/uc?export=view&id=${frame.url_id}`;
+        var reference_url= `https://drive.google.com/uc?export=view&id=${ref_frame.url_id}`;
 
         queryImg.src=query_url;
         referenceImg.src=reference_url;
@@ -1980,6 +1953,8 @@ function showSelectedImage(idx,image=true) {
 
 function showData() {
     let scatter_embs=store.scatter_dict;
+    console.log(scatter_embs);
+
     let video_vectors=store.video_vec;
     let video_events=store.video_events;
 
