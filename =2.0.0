@@ -1,0 +1,31 @@
+
+> libpq@1.8.9 install /home/felicia/research/ActionSync/node_modules/libpq
+> node-gyp rebuild
+
+make: Entering directory '/home/felicia/research/ActionSync/node_modules/libpq/build'
+  CXX(target) Release/obj.target/addon/src/connection.o
+  CXX(target) Release/obj.target/addon/src/connect-async-worker.o
+  CXX(target) Release/obj.target/addon/src/addon.o
+  SOLINK_MODULE(target) Release/obj.target/addon.node
+  COPY Release/addon.node
+make: Leaving directory '/home/felicia/research/ActionSync/node_modules/libpq/build'
+/home/felicia/research/ActionSync
+├── babel-eslint@10.1.0 
+├── bootstrap@4.6.0 
+├── d3-lasso@0.0.5 
+├── eslint@7.7.0 
+├── eslint-plugin-d3@1.5.0 
+├── eslint-plugin-html@6.0.3 
+├── jquery@3.6.0 
+├── pg@8.7.1 
+├─┬ pg-native@3.0.0 
+│ ├─┬ libpq@1.8.9 
+│ │ ├─┬ bindings@1.5.0 
+│ │ │ └── file-uri-to-path@1.0.0 
+│ │ └── nan@2.15.0 
+│ ├─┬ pg-types@1.13.0 
+│ │ └── postgres-array@1.0.3 
+│ └─┬ readable-stream@1.0.31 
+│   └── string_decoder@0.10.31 
+└── popper.js@1.16.1 
+

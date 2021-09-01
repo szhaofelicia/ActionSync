@@ -1,12 +1,12 @@
 node_modules/
 bower_components/
 archived/
-data/
 
 removed_cpdes.js
-heatmap_codes.js
+archived/heatmap_codes.js
 demo.txt
 memo.txt
+archived/fast_data.txt
 
 .eslintrc.json
 npm-debug.log

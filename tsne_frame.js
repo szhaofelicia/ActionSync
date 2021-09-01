@@ -38,12 +38,14 @@ function embsScatter(embs) {
     var width=d3.select("#tsne")
         .style("width")
         .slice(0,-2);
+    var height=d3.select("#embedding_space")
+        .style("height")
+        .slice(0,-2);
 
     const margin={top:20,bottom:30,left:20,right:30, intervalX:30, intervalY:50};
 
-
     var maxWidth=d3.min([width*0.90,1500]);
-    var maxHeight=d3.min([width*0.5,400]);
+    var maxHeight=d3.min([height*0.90,400]);
 
     var svg=d3.select("#scatter")
         .style("width",maxWidth+margin.left+margin.right)
@@ -509,7 +511,7 @@ function embsScatter(embs) {
 
     const marker_h=25;
     const lg_w=20;
-    const lg_h=150;
+    const lg_h=100;
     
     ///////////////////////////////////////////////////////////////////////////
     ////////////////// Hover & Click functions for legend /////////////////////
@@ -1069,7 +1071,11 @@ function videoHeatmap(vectors,videoEvents,action="swing") {
     var width=d3.select("#swingVideo")
         .style("width")
         .slice(0,-2);
-    const margin={top:50,bottom:20,left:120,right:30, intervalX:100, intervalY:50};
+    var height=d3.select("#tsne")
+        .style("height")
+        .slice(0,-2);
+
+    const margin={top:35,bottom:20,left:120,right:30, intervalX:100, intervalY:50};
     const videoSamples={
         "swing":[{"vidx":165,"cluster":2,"video":"H2RJ33BPVBQ4"},{"vidx":175,"cluster":6,"video":"D8VI1WQ5GFI0"},{"vidx":198,"cluster":0,"video":"NM9MYF2F8620"},
             {"vidx":86,"cluster":6,"video":"MN0RZJGOBTJZ"},{"vidx":137,"cluster":0,"video":"CI7I88Z16L4C"},{"vidx":118,"cluster":4,"video":"0ZZOMDIRKUHT"},
@@ -1098,11 +1104,10 @@ function videoHeatmap(vectors,videoEvents,action="swing") {
     const clusters={"swingCos":8,"swingEuc":8,"ballCos":8,"ballEuc":8};
     const metric="cosine";
 
-    var heatmapWidth=width*0.25;
-    var maxHeight=d3.min([width*0.45,400]);
+    var heatmapWidth=width*0.26;
+    var maxHeight=d3.min([height*0.9,400]);
 
     var scatterWidth=width*0.2;
-
 
     var svgMap=d3.select(`#${action}Heatmap`)
         .style("width",heatmapWidth+margin.left+margin.intervalX)
@@ -1644,7 +1649,7 @@ function videoHeatmap(vectors,videoEvents,action="swing") {
     const allVideos=["videoX","videoY"];
     const videoLength={"swing":53,"ball":84};
 
-    var eventWidth=d3.min([width*0.4,600])
+    var eventWidth=d3.min([width*0.3,600])
 
     var svgEvent=d3.select(`#${action}Event`)
         .style("width",margin.left+eventWidth+margin.right)
@@ -1811,58 +1816,24 @@ function videoHeatmap(vectors,videoEvents,action="swing") {
             .remove();
 
     }
-
-
-    // function resetClick() {
-    //     d3.selectAll(".selected-point").style("display","none");
-
-    //     d3.selectAll(".legendMarker")
-    //         .on("mouseover", selectLegend(0.02))
-    //         .on("mouseout", selectLegend(pointOpacity));
-
-    //     body.selectAll(".point-image,.point-left,.point-right")
-    //         .style("opacity", 1)
-    //         .style("visibility", "visible")
-    //         .style("stroke-width",  "0px")
-
-    //     var queryImg = document.getElementById("queryImage");
-    //     if (queryImg) {
-    //         queryImg.style.visibility="hidden";
-    //     }
-    //     var referenceImg = document.getElementById("referenceImage");
-    //     if (referenceImg) {
-    //         referenceImg.style.visibility="hidden";
-    //     }
-
-    //     var myQuery=document.getElementById("query")
-    //     var ctxQ=myQuery.getContext("2d");
-    //     ctxQ.clearRect(0, 0, myQuery.width, myQuery.height);
-
-    //     var myReference=document.getElementById("reference")
-    //     var ctxR=myReference.getContext("2d");
-    //     ctxR.clearRect(0, 0, myReference.width, myReference.height);
-
-    // }
 }
 
 
 function showSelectedImage(idx,image=true) {
     const embs=store.scatter_dict;
-    const margin={top:30,bottom:30,left:20,right:20};
+    const margin={top:30,bottom:10,left:20,right:20};
     if (image){
         var frame=embs[idx];
         var ref_idx=+frame.id; // reference:st,ed
     }else{
         var video=idx[0];
         var time=idx[1];
-//        console.log(video);
-//        console.log(time);
+
         var frame=embs.filter(d=> d.video==video && +d.step==+time);
         if (frame){
             frame=frame[0];
         }
         var ref_idx=+frame.id;
-        console.log(ref_idx);
     }
 
     if (frame.label==0){
@@ -1881,11 +1852,15 @@ function showSelectedImage(idx,image=true) {
         .style("width")
         .slice(0,-2);
 
+    var height=d3.select("#frame")
+        .style("height")
+        .slice(0,-2);
+
     var maxWidth=d3.min([width-margin.left-margin.right,800]);
-    var maxHeight=d3.min([width*0.6,350]);
+    var maxHeight=d3.min([height-margin.top-margin.down,350]);
 
     var imgWidth=maxWidth*0.5;
-    var imgHeight=maxHeight*0.7+5;
+    var imgHeight=maxHeight*0.65;
 
     var patchWidth=(imgWidth-5)*0.5;
     var patchHeight=imgHeight*0.5;
@@ -1953,7 +1928,6 @@ function showSelectedImage(idx,image=true) {
 
 function showData() {
     let scatter_embs=store.scatter_dict;
-    console.log(scatter_embs);
 
     let video_vectors=store.video_vec;
     let video_events=store.video_events;
