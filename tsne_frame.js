@@ -2,13 +2,12 @@ let store={
     "selected_frame":null,
 }
 
-//const action="bbgame_swing_ball";
-//const split="train";
-//const date="0815";
 
 const emb_path=`data/84videos_image_embs.json`;
 const vector_path=`data/84videos_vector.csv`;
 const event_path=`data/video_events.json`;
+const video_attr_path=`data/video_attributes.json`;
+
 
 //const extention_id="chrome-extension://ihckakjjeajfccjdbhgeedageimiomio/";
 
@@ -26,10 +25,13 @@ function loadData() {
         d3.json(emb_path),
         d3.csv(vector_path),
         d3.json(event_path),
+        d3.json(video_attr_path),
+
     ]).then(datasets =>{
         store.scatter_dict=datasets[0].data;
         store.video_vec=datasets[1];
         store.video_events=datasets[2];
+        store.video_attributes=datasets[3];
         return store;
     })
 }
@@ -1067,7 +1069,11 @@ function CenterPointer(embs,points) {
 }
 
 
-function videoHeatmap(vectors,videoEvents,action="swing") {
+function videoHeatmap(video_data,action="swing") {
+    let vectors=video_data[0];
+    let videoEvents=video_data[1];
+    let videoAttributes=video_data[2]
+
     var width=d3.select("#swingVideo")
         .style("width")
         .slice(0,-2);
@@ -1076,29 +1082,8 @@ function videoHeatmap(vectors,videoEvents,action="swing") {
         .slice(0,-2);
 
     const margin={top:35,bottom:20,left:120,right:30, intervalX:100, intervalY:50};
-    const videoSamples={
-        "swing":[{"vidx":165,"cluster":2,"video":"H2RJ33BPVBQ4"},{"vidx":175,"cluster":6,"video":"D8VI1WQ5GFI0"},{"vidx":198,"cluster":0,"video":"NM9MYF2F8620"},
-            {"vidx":86,"cluster":6,"video":"MN0RZJGOBTJZ"},{"vidx":137,"cluster":0,"video":"CI7I88Z16L4C"},{"vidx":118,"cluster":4,"video":"0ZZOMDIRKUHT"},
-            {"vidx":106,"cluster":4,"video":"OOMWCSDU09JV"}, {"vidx":14,"cluster":0,"video":"CO24TQ52TXCF"},{"vidx":185,"cluster":3,"video":"O35GBDO4IA6O"},
-            {"vidx":68,"cluster":6,"video":"G7VR5IJV0IAX"}, {"vidx":61,"cluster":2,"video":"3MZWXKNR08QJ"},{"vidx":105,"cluster":4,"video":"B6ZDY1EVJCSJ"},
-            {"vidx":81,"cluster":3,"video":"N495HRUNVOOZ"},{"vidx":201,"cluster":1,"video":"I9B4I1HQERAT"},{"vidx":110,"cluster":2,"video":"KE1GU5GWBSCF"},
-            {"vidx":158,"cluster":7,"video":"8R2HHRIJG73A"},  {"vidx":40,"cluster":3,"video":"MCE1ZFDBM4PR"},{"vidx":167,"cluster":7,"video":"HKWI4IVGNBSL"},
-            {"vidx":135,"cluster":7,"video":"GHD9ZYPBWH9G"},{"vidx":188,"cluster":0,"video":"ES16TY3TT09O"},{"vidx":149,"cluster":3,"video":"QSGJHSYQI11P"},
-            {"vidx":113,"cluster":3,"video":"EN93W3KUIDPR"},{"vidx":130,"cluster":3,"video":"BNPP45GVM0QJ"},{"vidx":169,"cluster":3,"video":"JYMR81NQQN4Z"},
-            {"vidx":9,"cluster":3,"video":"KDV4OD86Z155"},{"vidx":162,"cluster":3,"video":"A71JFN2AHMQ9"}],
-        
-        "ball":[{"vidx":15,"cluster":1,"video":"0N6NTL740URF"},{"vidx":200,"cluster":1,"video":"4X7I2ILNXO0P"},{"vidx":91,"cluster":1,"video":"4SSFIK1YVJ2D"},
-        {"vidx":24,"cluster":4,"video":"5NHV6UB2NYWL"},{"vidx":63,"cluster":1,"video":"6L8P2HJBWN94"},{"vidx":171,"cluster":4,"video":"2E8Y710KD7K8"},
-        {"vidx":114,"cluster":1,"video":"0EGDSB6I18DC"},{"vidx":182,"cluster":6,"video":"AYMU7BHW5EF1"},{"vidx":190,"cluster":4,"video":"2VE5WCLDYGO3"},
-        {"vidx":41,"cluster":6,"video":"9O01680UWDKM"},{"vidx":8,"cluster":6,"video":"5CMCHLR8YI21"},{"vidx":163,"cluster":7,"video":"9L9XEHJFMAPR"},
-        {"vidx":101,"cluster":6,"video":"4OTCA5P3UZZV"},{"vidx":149,"cluster":2,"video":"6BPO6VW5A482"},{"vidx":69,"cluster":7,"video":"7R8F910D6A25"},
-        {"vidx":6,"cluster":0,"video":"70TR1XOSU3G2"},{"vidx":59,"cluster":7,"video":"2BFBWNJINMS9"},{"vidx":71,"cluster":7,"video":"5TZVJJXCZNQ5"},
-        {"vidx":168,"cluster":0,"video":"92ILOFDHIIA9"},{"vidx":111,"cluster":0,"video":"8VF4KX0PLVJI"},{"vidx":105,"cluster":7,"video":"36PTBRA0O8DM"},
-        {"vidx":118,"cluster":7,"video":"5ZJVH1WG4OUD"},{"vidx":62,"cluster":3,"video":"3VXHB3EI46Z5"},{"vidx":142,"cluster":3,"video":"6429HNMYKU22"},
-        {"vidx":199,"cluster":3,"video":"ALFS8ZE44XTI"},{"vidx":18,"cluster":3,"video":"9KQ9IBJQKUA1"}]
-    };
+    const videoSamples=videoAttributes["attributes"];
 
-    
     const CtCos={"swing":[153,173,2,36,59,76,49,171,5,78,47,11,203,17,112,156],
                     "ball": [17,40,130,133,97,110,140,144,191,136,107,177,159,176,198,145]};
     const clusters={"swingCos":8,"swingEuc":8,"ballCos":8,"ballEuc":8};
@@ -1931,10 +1916,13 @@ function showData() {
 
     let video_vectors=store.video_vec;
     let video_events=store.video_events;
+    let video_attributes=store.video_attributes;
+
+    let video_data=[video_vectors,video_events,video_attributes];
 
     embsScatter(scatter_embs);
-    videoHeatmap(video_vectors,video_events,"swing");
-    videoHeatmap(video_vectors,video_events,"ball");
+    videoHeatmap(video_data,"swing");
+    videoHeatmap(video_data,"ball");
 
 }
 loadData().then(showData);
