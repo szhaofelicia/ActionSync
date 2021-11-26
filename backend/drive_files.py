@@ -9,8 +9,8 @@ from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 
 SCOPES = ['https://www.googleapis.com/auth/drive.metadata.readonly']
-if os.path.exists('../token.json'):
-    creds = Credentials.from_authorized_user_file('../token.json', SCOPES)
+if os.path.exists('../backup/token.json'):
+    creds = Credentials.from_authorized_user_file('../backup/token.json', SCOPES)
 drive_service = build('drive', 'v3', credentials=creds)
 
 page_token = None
