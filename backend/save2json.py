@@ -6,7 +6,7 @@ split = 'train'
 date = '0815'
 s = 3  # 3,4,5
 
-df_list = pd.read_csv("data/image_url.csv", header=0, index_col=0).values.tolist()
+df_list = pd.read_csv("../data/image_url.csv", header=0, index_col=0).values.tolist()
 url_dict = {}
 for value in df_list:
     # print(value)

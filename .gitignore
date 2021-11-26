@@ -9,4 +9,4 @@ memo.txt
 
 .eslintrc.json
 npm-debug.log
-package-lock.json
+.js/package-lock.json
