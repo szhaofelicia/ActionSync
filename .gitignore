@@ -10,3 +10,6 @@ memo.txt
 .eslintrc.json
 npm-debug.log
 js/package-lock.json
+
+
+token.json
