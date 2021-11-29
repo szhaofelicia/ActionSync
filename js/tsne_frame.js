@@ -8,9 +8,6 @@ const vector_path=`data/84videos_vector.csv`;
 const event_path=`data/video_events.json`;
 const video_attr_path=`data/video_attributes.json`;
 
-
-//const extention_id="chrome-extension://ihckakjjeajfccjdbhgeedageimiomio/";
-
 const activities=["swing","ball"];
 const reference=[["H2RJ33BPVBQ4", "D8VI1WQ5GFI0", "NM9MYF2F8620"],["4X7I2ILNXO0P","0N6NTL740URF","4SSFIK1YVJ2D"]]
 const reference_idx=[[1642,1907,2063],[2391,5692,3323]]
@@ -1858,8 +1855,6 @@ function showSelectedImage(idx,image=true) {
     queryImg.width=0;
     queryImg.height=0;
 
-    // myImg.style.border="2px solid #021a40";
-
     var myQuery=document.getElementById("query");
     myQuery.width=imgWidth;
     myQuery.height=imgHeight+patchHeight+3;
@@ -1879,14 +1874,7 @@ function showSelectedImage(idx,image=true) {
         return r;
     }
 
-    if (frame) {        
-//        var query_url=extention_id+activities[+frame.label]+"_videos/rm_noise/frames/"+frame.video+FormatNumberLength(frame.step,4)+".jpg";
-//        var reference_url=extention_id+activities[+frame.label]+"_videos/rm_noise/frames/"+ref_frame.video+FormatNumberLength(ref_frame.step,4)+".jpg";
-
-//        var query_url=image_url+activities[frame.seq_labels]+"/"+frame.names.slice(2,-1)+FormatNumberLength(frame.steps,4)+".jpg";
-//        var reference_url=image_url+activities[frame.seq_labels]+"/"+frame.names.slice(2,-1)+FormatNumberLength(frame.steps,4)+".jpg";
-
-
+    if (frame) {
         var query_url = `https://drive.google.com/uc?export=view&id=${frame.url_id}`;
         var reference_url= `https://drive.google.com/uc?export=view&id=${ref_frame.url_id}`;
 
@@ -1913,7 +1901,6 @@ function showSelectedImage(idx,image=true) {
 
 function showData() {
     let scatter_embs=store.scatter_dict;
-
     let video_vectors=store.video_vec;
     let video_events=store.video_events;
     let video_attributes=store.video_attributes;

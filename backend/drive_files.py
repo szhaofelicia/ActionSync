@@ -36,4 +36,4 @@ while True:
 df_list = pd.DataFrame(np.array([names, ids]).T, columns=["name", "id"])
 df_list.to_csv("data/image_url.csv")
 # df_list = pd.read_csv("data/image_url.csv", header=0, index_col=0)
-df_list.to_json("data/image_url.json", orient="table")
+# df_list.to_json("data/image_url.json", orient="table")
