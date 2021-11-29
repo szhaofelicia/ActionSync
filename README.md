@@ -1,6 +1,6 @@
 # ActionSync: A Visual Analytics System
 
-ActionSync is an interactive visual analytics system that analyzes the correlation between the player actions and the results of pitches in base baseball games.
+__ActionSync__ is an interactive visual analytics system that analyzes the correlation between the player actions and the results of pitches in base baseball games.
 
 Our system visually analyze the sports video clips extracted from the MLB-YouTube dataset, which consists of various activities of pitching in baseball games.
 
@@ -31,7 +31,7 @@ on the image level, it can detect the frames related to the results and allow us
 -  `video_events.json` contain the data of image embeddings, which are shown in the image embedding video.
 
 `js/` and `css/` folder:
-- these folders contain all the front-end code of the visual analytics system ActionSync.
+- these folders contain all the front-end code of the visual analytics system __ActionSync__.
 
 ## Generate explanations for your own video dataset
 The codes for video processing is shown in https://github.com/szhaofelicia/TripletTCC
